@@ -1,0 +1,201 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="page-head">
+    <div>
+        <div class="eyebrow">NATIONAL / MULTI-MINE VIEW</div>
+        <h1>Governance Control Centre</h1>
+        <p>Unified compliance, inspection and operational risk visibility.</p>
+    </div>
+    <a class="primary-btn" href="{{ url_for('new_inspection') }}">+ New Field Inspection</a>
+</div>
+
+<div class="cards">
+    <div class="metric"><span>MONITORED MINES</span><strong>{{ total }}</strong><small>Across subsidiaries</small></div>
+    <div class="metric"><span>AVG. COMPLIANCE</span><strong>{{ avg_compliance }}%</strong><small>Current governance status</small></div>
+    <div class="metric danger"><span>HIGH-RISK MINES</span><strong>{{ high }}</strong><small>Require management attention</small></div>
+    <div class="metric warning"><span>OPEN ACTIONS</span><strong>{{ open_issues }}</strong><small>Pending closure / escalation</small></div>
+</div>
+
+<section class="panel" id="map-section">
+    <div class="panel-head"><div><h2>GIS Risk Intelligence</h2><p>Geographical view of mine-level governance risk.</p></div><span class="badge">LIVE VIEW</span></div>
+    <div id="map"></div>
+</section>
+<section class="panel" id="live-environment">
+    <div class="panel-head">
+        <div>
+            <h2>Live Environmental Monitoring</h2>
+            <p>Latest environmental readings from Coal India CAAQMS.</p>
+        </div>
+        <span class="badge">● LIVE · CAAQMS</span>
+    </div>
+
+    {% if live_environment %}
+    <div class="risk-grid">
+        {% for x in live_environment[:6] %}
+        <div class="risk-card">
+            <div>
+                <span class="risk-label">{{ x.area }}</span>
+                <h3>{{ x.mine_name }}</h3>
+                <small>{{ x.company }}</small>
+            </div>
+
+            <p>
+                <strong>PM2.5:</strong>
+                {{ x.pm25 if x.pm25 is not none else "N/A" }} µg/m³
+            </p>
+
+            <p>
+                <strong>PM10:</strong>
+                {{ x.pm10 if x.pm10 is not none else "N/A" }} µg/m³
+            </p>
+
+            <p>
+                <strong>SO₂:</strong>
+                {{ x.so2 if x.so2 is not none else "N/A" }} µg/m³
+            </p>
+
+            <p>
+                <strong>NO₂:</strong>
+                {{ x.no2 if x.no2 is not none else "N/A" }} µg/m³
+            </p>
+
+            <p>
+                <strong>CO:</strong>
+                {{ x.co if x.co is not none else "N/A" }} mg/m³
+            </p>
+
+            <small>
+                Updated: {{ x.record_time }}
+                · Device: {{ x.device_id }}
+            </small>
+        </div>
+        {% endfor %}
+    </div>
+{% else %}
+    <p>No live CAAQMS data available. The system will continue using the last available data.</p>
+{% endif %}
+</section>
+
+<div class="two-col">
+<section class="panel" id="inspections">
+    <div class="panel-head"><div><h2>Recent Field Observations</h2><p>Latest geo-tagged inspection activity.</p></div></div>
+    <div class="table-wrap"><table>
+        <tr><th>Mine</th><th>Category</th><th>Severity</th><th>Status</th></tr>
+        {% for x in inspections %}
+        <tr><td><a href="{{ url_for('mine_detail', mine_id=x.mine_id) }}">{{ x.mine_name }}</a></td><td>{{ x.category }}</td><td><span class="severity {{ x.severity|lower }}">{{ x.severity }}</span></td><td>{{ x.action_status }}</td></tr>
+        {% endfor %}
+    </table></div>
+</section>
+
+<section class="panel" id="compliance">
+    <div class="panel-head"><div><h2>Compliance Watchlist</h2><p>Requirements needing attention.</p></div></div>
+    <div class="table-wrap"><table>
+        <tr><th>Mine</th><th>Requirement</th><th>Due</th><th>Status</th></tr>
+        {% for x in compliance %}
+        <tr><td>{{ x.mine_name }}</td><td>{{ x.requirement }}</td><td>{{ x.due_date }}</td><td><span class="status {{ x.status|lower|replace(' ','-') }}">{{ x.status }}</span></td></tr>
+        {% endfor %}
+    </table></div>
+</section>
+</div>
+
+<section class="panel" id="contractors">
+    <div class="panel-head">
+        <div>
+            <h2>Contractor Governance</h2>
+            <p>Contractor performance and operational risk visibility.</p>
+        </div>
+        <span class="badge">RISK MONITORING</span>
+    </div>
+
+    <div class="table-wrap">
+        <table>
+            <tr>
+                <th>Contractor</th>
+                <th>Mine</th>
+                <th>Performance</th>
+                <th>Risk</th>
+            </tr>
+
+            {% for x in contractors %}
+            <tr>
+                <td><strong>{{ x.name }}</strong></td>
+                <td>{{ x.mine_name }}</td>
+                <td>{{ x.performance }}%</td>
+                <td>
+                    <span class="severity {{ x.risk|lower }}">
+                        {{ x.risk }}
+                    </span>
+                </td>
+            </tr>
+            {% endfor %}
+        </table>
+    </div>
+</section>
+
+<section class="panel" id="analytics">
+    <div class="panel-head"><div><h2>AI Governance Risk Signals</h2><p>Explainable risk factors derived from demo operational and compliance data.</p></div></div>
+        <div class="risk-grid">
+        {% for mine in mines %}
+        <a class="risk-card" href="{{ url_for('mine_detail', mine_id=mine.id) }}">
+            <div>
+                <span class="risk-label">{{ mine.status }} RISK</span>
+                <h3>{{ mine.name }}</h3>
+                <small>{{ mine.subsidiary }} · {{ mine.state }}</small>
+            </div>
+
+            <div class="risk-score">
+                {{ mine.risk_score }}<small>/100</small>
+            </div>
+
+            <div class="risk-bar">
+                <i style="width:{{ mine.risk_score }}%"></i>
+            </div>
+
+            <p>
+                Compliance {{ mine.compliance }}% · Click for contributing factors
+            </p>
+        </a>
+        {% endfor %}
+    </div>
+</section>
+<section class="panel" id="reports">
+    <div class="panel-head">
+        <div>
+            <h2>Governance Reports</h2>
+            <p>Summary of current governance, compliance and operational risk.</p>
+        </div>
+        <span class="badge">CURRENT STATUS</span>
+    </div>
+
+    <div class="cards">
+        <div class="metric">
+            <span>TOTAL MINES</span>
+            <strong>{{ total }}</strong>
+            <small>Currently monitored</small>
+        </div>
+
+        <div class="metric">
+            <span>AVERAGE COMPLIANCE</span>
+            <strong>{{ avg_compliance }}%</strong>
+            <small>Across monitored mines</small>
+        </div>
+
+        <div class="metric danger">
+            <span>HIGH-RISK MINES</span>
+            <strong>{{ high }}</strong>
+            <small>Require attention</small>
+        </div>
+
+        <div class="metric warning">
+            <span>OPEN ACTIONS</span>
+            <strong>{{ open_issues }}</strong>
+            <small>Pending closure</small>
+        </div>
+    </div>
+
+    <p style="margin:0;color:#71808c;font-size:11px;">
+        Report generated from current mine governance, inspection,
+        compliance, contractor and environmental data.
+    </p>
+</section>
+{% endblock %}

@@ -1,0 +1,69 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<div style="max-width:480px;margin:60px auto;">
+
+    <section class="panel">
+
+        <div class="panel-head">
+            <div>
+                <div class="eyebrow">SMARTCOAL GOVERNANCE</div>
+                <h2>Secure Portal Login</h2>
+                <p>Authorized access to governance and inspection interfaces.</p>
+            </div>
+        </div>
+
+        {% if error %}
+        <div style="background:#f8e6e5;color:#a23b35;padding:12px;border-radius:6px;margin-bottom:15px;font-size:12px;">
+            {{ error }}
+        </div>
+        {% endif %}
+        <style>
+.login-form label {
+    display: block;
+    margin-bottom: 18px;
+}
+
+.login-form input {
+    display: block;
+    margin-top: 7px;
+    width: 100%;
+    box-sizing: border-box;
+}
+</style>
+        <form method="post" class="login-form">
+
+            <label>
+                Username
+                <input
+                    type="text"
+                    name="username"
+                    required
+                    placeholder="Enter username">
+            </label>
+
+            <label>
+                Password
+                <input
+                    type="password"
+                    name="password"
+                    required
+                    placeholder="Enter password">
+            </label>
+
+            <button
+                class="primary-btn"
+                type="submit"
+                style="width:100%;margin-top:10px;">
+                Sign In
+            </button>
+
+        </form>
+
+    </section>
+
+</div>
+
+{% endblock %}
+

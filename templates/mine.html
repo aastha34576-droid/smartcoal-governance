@@ -1,0 +1,93 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="page-head">
+    <div>
+        <div class="eyebrow">{{ mine.subsidiary }} · {{ mine.state }}</div>
+        <h1>{{ mine.name }}</h1>
+        <p>Mine governance profile and risk intelligence.</p>
+    </div>
+    <a class="secondary-btn" href="{{ url_for('dashboard') }}">← Back to Control Centre</a>
+</div>
+
+<div class="cards">
+    <div class="metric"><span>COMPLIANCE</span><strong>{{ mine.compliance }}%</strong><small>Overall statutory status</small></div>
+    <div class="metric danger">
+    <span>AI RISK SCORE</span>
+    <strong>{{ risk_score }}/100</strong>
+    <small>{{ risk_status }} priority</small>
+</div>
+    <div class="metric"><span>OPEN OBSERVATIONS</span><strong>{{ inspections|length }}</strong><small>Inspection records</small></div>
+    <div class="metric warning"><span>CONTRACTORS</span><strong>{{ contractors|length }}</strong><small>Registered on platform</small></div>
+</div>
+
+<div class="two-col">
+<section class="panel">
+
+    <div class="panel-head">
+        <div>
+            <h2>AI Risk Explanation</h2>
+            <p>Explainable governance factors contributing to the current mine risk score.</p>
+        </div>
+    </div>
+
+    <ul class="factor-list">
+
+        {% if risk_factors %}
+
+            {% for factor in risk_factors %}
+            <li>
+                <b>Risk Factor:</b> {{ factor }}
+            </li>
+            {% endfor %}
+
+        {% else %}
+
+            <li>
+                <b>No major risk factors detected.</b>
+                Current governance indicators are within acceptable range.
+            </li>
+
+        {% endif %}
+
+        <li>
+            <b>Governance Risk Score:</b>
+            <strong>{{ risk_score }}/100</strong>
+            — {{ risk_status }} priority
+        </li>
+
+        <li>
+            <b>Recommended Action:</b>
+            {{ recommendation }}
+        </li>
+
+    </ul>
+
+</section>
+
+
+<section class="panel">
+    <div class="panel-head"><div><h2>Corrective Action Workflow</h2><p>Digital accountability from observation to closure.</p></div></div>
+    <div class="workflow"><span>Reported</span><b>→</b><span>Assigned</span><b>→</b><span>Corrected</span><b>→</b><span>Verified</span><b>→</b><span>Closed</span></div>
+</section>
+</div>
+
+<section class="panel">
+    <div class="panel-head"><div><h2>Inspection & Violation History</h2></div></div>
+    <div class="table-wrap"><table>
+        <tr><th>Date</th><th>Category</th><th>Observation</th><th>Severity</th><th>Action</th></tr>
+        {% for x in inspections %}
+        <tr><td>{{ x.created_at }}</td><td>{{ x.category }}</td><td>{{ x.observation }}</td><td><span class="severity {{ x.severity|lower }}">{{ x.severity }}</span></td><td>{{ x.action_status }}</td></tr>
+        {% endfor %}
+    </table></div>
+</section>
+
+<section class="panel" id="contractors">
+    <div class="panel-head"><div><h2>Contractor Performance</h2></div></div>
+    <div class="table-wrap"><table>
+        <tr><th>Contractor</th><th>Performance</th><th>Risk</th></tr>
+        {% for x in contractors %}
+        <tr><td>{{ x.name }}</td><td>{{ x.performance }}%</td><td><span class="status">{{ x.risk }}</span></td></tr>
+        {% endfor %}
+    </table></div>
+</section>
+{% endblock %}
