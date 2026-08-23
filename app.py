@@ -659,6 +659,8 @@ def inspector():
 
 @app.route("/inspection/new", methods=["GET", "POST"])
 def new_inspection():
+    if not session.get("logged_in") or session.get("role") != "inspector":
+        return redirect(url_for("login"))
     conn = get_db()
     mines = conn.execute("SELECT * FROM mines ORDER BY name").fetchall()
     if request.method == "POST":
