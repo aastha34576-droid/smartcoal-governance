@@ -1,0 +1,976 @@
+{% extends "base.html" %}
+{% block content %}
+
+<div class="page-head">
+
+    <div>
+        <div class="eyebrow">
+            {{ mine.subsidiary }} · {{ mine.state }}
+        </div>
+
+        <h1>{{ mine.name }}</h1>
+
+        <p>
+            Mine governance profile and AI-powered risk intelligence.
+        </p>
+    </div>
+
+    <a class="secondary-btn" href="{{ url_for('dashboard') }}">
+        ← Back to Control Centre
+    </a>
+
+</div>
+
+
+<!-- ======================================================
+     KEY METRICS
+====================================================== -->
+
+<div class="cards">
+
+    <div class="metric">
+
+        <span>COMPLIANCE</span>
+
+        <strong>
+            {{ mine.compliance }}%
+        </strong>
+
+        <small>
+            Overall statutory status
+        </small>
+
+    </div>
+
+
+    <div class="metric danger">
+
+        <span>GOVERNANCE RISK</span>
+
+        <strong>
+            {{ risk_score }}/100
+        </strong>
+
+        <small>
+            {{ risk_status }} priority
+        </small>
+
+    </div>
+
+
+    <div class="metric">
+
+        <span>OPEN OBSERVATIONS</span>
+
+        <strong>
+            {{ inspections|length }}
+        </strong>
+
+        <small>
+            Inspection records
+        </small>
+
+    </div>
+
+
+    <div class="metric warning">
+
+        <span>CONTRACTORS</span>
+
+        <strong>
+            {{ contractors|length }}
+        </strong>
+
+        <small>
+            Registered on platform
+        </small>
+
+    </div>
+
+</div>
+
+
+<!-- ======================================================
+     AI RISK + ML ANALYSIS
+====================================================== -->
+
+<div class="two-col">
+
+
+<section class="panel">
+
+    <div class="panel-head">
+
+        <div>
+
+            <h2>
+                AI Governance Risk Analysis
+            </h2>
+
+            <p>
+                Explainable breakdown of the calculated
+                mine-level governance risk.
+            </p>
+
+        </div>
+
+        <span class="badge">
+            {{ risk_status }} RISK
+        </span>
+
+    </div>
+
+
+    <!-- Overall score -->
+
+    <div
+        style="
+        text-align:center;
+        padding:15px 0 20px;
+        "
+    >
+
+        <div
+            style="
+            font-size:42px;
+            font-weight:800;
+            "
+        >
+            {{ risk_score }}
+            <span
+                style="
+                font-size:14px;
+                color:#7b8893;
+                "
+            >
+                /100
+            </span>
+        </div>
+
+        <div
+            style="
+            font-size:11px;
+            color:#7b8893;
+            margin-top:3px;
+            "
+        >
+            Unified Governance Risk Score
+        </div>
+
+    </div>
+
+
+    <!-- Risk components -->
+
+    <div class="table-wrap">
+
+        <table>
+
+            <tr>
+                <th>Risk Component</th>
+                <th>Contribution</th>
+                <th>Maximum</th>
+            </tr>
+
+
+            <tr>
+
+                <td>
+                    Compliance
+                </td>
+
+                <td>
+                    {{ risk_components.compliance }}
+                </td>
+
+                <td>
+                    30
+                </td>
+
+            </tr>
+
+
+            <tr>
+
+                <td>
+                    Inspections
+                </td>
+
+                <td>
+                    {{ risk_components.inspection }}
+                </td>
+
+                <td>
+                    25
+                </td>
+
+            </tr>
+
+
+            <tr>
+
+                <td>
+                    Contractors
+                </td>
+
+                <td>
+                    {{ risk_components.contractor }}
+                </td>
+
+                <td>
+                    20
+                </td>
+
+            </tr>
+
+
+            <tr>
+
+                <td>
+                    Environment + ML
+                </td>
+
+                <td>
+                    {{ risk_components.environment }}
+                </td>
+
+                <td>
+                    25
+                </td>
+
+            </tr>
+
+        </table>
+
+    </div>
+
+
+    <!-- Risk factors -->
+
+    <ul class="factor-list">
+
+        {% if risk_factors %}
+
+            {% for factor in risk_factors %}
+
+            <li>
+                <b>Risk Factor:</b>
+                {{ factor }}
+            </li>
+
+            {% endfor %}
+
+        {% else %}
+
+            <li>
+
+                <b>
+                    No major risk factors detected.
+                </b>
+
+                Current governance indicators
+                are within acceptable range.
+
+            </li>
+
+        {% endif %}
+
+    </ul>
+
+</section>
+
+
+<!-- ======================================================
+     ML PANEL
+====================================================== -->
+
+<section class="panel">
+
+    <div class="panel-head">
+
+        <div>
+
+            <h2>
+                Environmental ML Analysis
+            </h2>
+
+            <p>
+                Isolation Forest anomaly detection
+                using environmental monitoring patterns.
+            </p>
+
+        </div>
+
+
+        {% if ml_available %}
+
+        <span class="badge">
+            ML ACTIVE
+        </span>
+
+        {% else %}
+
+        <span class="badge">
+            ML UNAVAILABLE
+        </span>
+
+        {% endif %}
+
+    </div>
+
+
+    {% if anomaly %}
+
+
+        <!-- ML STATUS -->
+
+        <div
+            style="
+            padding:18px;
+            border:1px solid #e0e5e9;
+            border-radius:7px;
+            margin-bottom:15px;
+            "
+        >
+
+            <div
+                style="
+                font-size:10px;
+                color:#71808c;
+                font-weight:700;
+                letter-spacing:.7px;
+                "
+            >
+                ML DETECTION STATUS
+            </div>
+
+
+            <div
+                style="
+                font-size:24px;
+                font-weight:800;
+                margin-top:7px;
+                "
+            >
+
+                {% if anomaly.anomaly_level == "HIGH" %}
+
+                    ML ANOMALY: HIGH
+
+                {% elif anomaly.anomaly_level == "MEDIUM" %}
+
+                    ML ANOMALY: MEDIUM
+
+                {% else %}
+
+                    ML PATTERN: NORMAL
+
+                {% endif %}
+
+            </div>
+
+
+            <div
+                style="
+                margin-top:6px;
+                color:#71808c;
+                font-size:12px;
+                "
+            >
+
+                Anomaly Score:
+
+                <strong>
+                    {{ anomaly.anomaly_score }}/100
+                </strong>
+
+            </div>
+
+        </div>
+
+
+        <!-- ML explanation -->
+
+        <div
+            style="
+            padding:15px;
+            background:#f4f7f9;
+            border-radius:7px;
+            font-size:12px;
+            line-height:1.6;
+            "
+        >
+
+            <strong>
+                Model Explanation
+            </strong>
+
+            <p
+                style="
+                margin:7px 0 0;
+                color:#596873;
+                "
+            >
+
+                {{ anomaly.explanation }}
+
+            </p>
+
+        </div>
+
+
+        <!-- ML methodology -->
+
+        <div
+            style="
+            margin-top:15px;
+            font-size:10px;
+            color:#7b8893;
+            line-height:1.6;
+            "
+        >
+
+            <strong>
+                Model:
+            </strong>
+            Isolation Forest
+
+            <br>
+
+            <strong>
+                Learning type:
+            </strong>
+            Unsupervised anomaly detection
+
+            <br>
+
+            <strong>
+                Signal:
+            </strong>
+            PM2.5, PM10, SO₂, NO₂ and CO
+
+        </div>
+
+
+    {% else %}
+
+
+        <div
+            style="
+            padding:18px;
+            background:#f4f7f9;
+            border:1px solid #e0e5e9;
+            border-radius:7px;
+            "
+        >
+
+            <strong>
+                ML baseline unavailable
+            </strong>
+
+            <p
+                style="
+                margin:7px 0 0;
+                font-size:11px;
+                color:#71808c;
+                "
+            >
+
+                The system requires sufficient historical
+                environmental observations before generating
+                an anomaly result.
+
+            </p>
+
+        </div>
+
+
+    {% endif %}
+
+</section>
+
+</div>
+
+
+<!-- ======================================================
+     ENVIRONMENTAL MONITORING
+====================================================== -->
+
+<section class="panel">
+
+    <div class="panel-head">
+
+        <div>
+
+            <h2>
+                Environmental Monitoring
+            </h2>
+
+            <p>
+                Latest available CAAQMS environmental reading
+                associated with this mine.
+            </p>
+
+        </div>
+
+
+        {% if environment_live %}
+
+        <span class="badge">
+            ● LIVE CAAQMS
+        </span>
+
+        {% else %}
+
+        <span class="badge">
+            CACHED DATA
+        </span>
+
+        {% endif %}
+
+    </div>
+
+
+    {% if environment %}
+
+    <div class="table-wrap">
+
+        <table>
+
+            <tr>
+
+                <th>
+                    Parameter
+                </th>
+
+                <th>
+                    Reading
+                </th>
+
+                <th>
+                    Unit
+                </th>
+
+            </tr>
+
+
+            <tr>
+
+                <td>
+                    PM2.5
+                </td>
+
+                <td>
+                    {{ environment.pm25
+                       if environment.pm25 is not none
+                       else "N/A" }}
+                </td>
+
+                <td>
+                    µg/m³
+                </td>
+
+            </tr>
+
+
+            <tr>
+
+                <td>
+                    PM10
+                </td>
+
+                <td>
+                    {{ environment.pm10
+                       if environment.pm10 is not none
+                       else "N/A" }}
+                </td>
+
+                <td>
+                    µg/m³
+                </td>
+
+            </tr>
+
+
+            <tr>
+
+                <td>
+                    SO₂
+                </td>
+
+                <td>
+                    {{ environment.so2
+                       if environment.so2 is not none
+                       else "N/A" }}
+                </td>
+
+                <td>
+                    µg/m³
+                </td>
+
+            </tr>
+
+
+            <tr>
+
+                <td>
+                    NO₂
+                </td>
+
+                <td>
+                    {{ environment.no2
+                       if environment.no2 is not none
+                       else "N/A" }}
+                </td>
+
+                <td>
+                    µg/m³
+                </td>
+
+            </tr>
+
+
+            <tr>
+
+                <td>
+                    CO
+                </td>
+
+                <td>
+                    {{ environment.co
+                       if environment.co is not none
+                       else "N/A" }}
+                </td>
+
+                <td>
+                    mg/m³
+                </td>
+
+            </tr>
+
+
+            <tr>
+
+                <td>
+                    Monitoring Time
+                </td>
+
+                <td colspan="2">
+                    {{ environment.recorded_at
+                       or environment.record_time
+                       or "N/A" }}
+                </td>
+
+            </tr>
+
+
+            <tr>
+
+                <td>
+                    Source
+                </td>
+
+                <td colspan="2">
+                    {{ environment.source
+                       or "CAAQMS" }}
+                </td>
+
+            </tr>
+
+        </table>
+
+    </div>
+
+
+    {% else %}
+
+    <p>
+        No environmental monitoring data is currently
+        associated with this mine.
+    </p>
+
+    {% endif %}
+
+</section>
+
+
+<!-- ======================================================
+     RECOMMENDATION
+====================================================== -->
+
+<section class="panel">
+
+    <div class="panel-head">
+
+        <div>
+
+            <h2>
+                Recommended Management Action
+            </h2>
+
+            <p>
+                Suggested response based on current
+                governance risk indicators.
+            </p>
+
+        </div>
+
+    </div>
+
+
+    <div
+        style="
+        padding:16px;
+        background:#f4f7f9;
+        border-left:4px solid #1f5f8b;
+        border-radius:5px;
+        font-size:12px;
+        line-height:1.6;
+        "
+    >
+
+        {{ recommendation }}
+
+    </div>
+
+</section>
+
+
+<!-- ======================================================
+     INSPECTION HISTORY
+====================================================== -->
+
+<section class="panel">
+
+    <div class="panel-head">
+
+        <div>
+
+            <h2>
+                Inspection & Violation History
+            </h2>
+
+            <p>
+                Recorded field observations and
+                corrective-action status.
+            </p>
+
+        </div>
+
+    </div>
+
+
+    <div class="table-wrap">
+
+        <table>
+
+            <tr>
+
+                <th>
+                    Date
+                </th>
+
+                <th>
+                    Category
+                </th>
+
+                <th>
+                    Observation
+                </th>
+
+                <th>
+                    Severity
+                </th>
+
+                <th>
+                    Action
+                </th>
+
+            </tr>
+
+
+            {% for x in inspections %}
+
+            <tr>
+
+                <td>
+                    {{ x.created_at }}
+                </td>
+
+                <td>
+                    {{ x.category }}
+                </td>
+
+                <td>
+                    {{ x.observation }}
+                </td>
+
+                <td>
+
+                    <span
+                        class="severity {{ x.severity|lower }}"
+                    >
+                        {{ x.severity }}
+                    </span>
+
+                </td>
+
+                <td>
+                    {{ x.action_status }}
+                </td>
+
+            </tr>
+
+            {% endfor %}
+
+        </table>
+
+    </div>
+
+</section>
+
+
+<!-- ======================================================
+     CONTRACTORS
+====================================================== -->
+
+<section class="panel" id="contractors">
+
+    <div class="panel-head">
+
+        <div>
+
+            <h2>
+                Contractor Performance
+            </h2>
+
+            <p>
+                Contractor performance and operational risk.
+            </p>
+
+        </div>
+
+    </div>
+
+
+    <div class="table-wrap">
+
+        <table>
+
+            <tr>
+
+                <th>
+                    Contractor
+                </th>
+
+                <th>
+                    Performance
+                </th>
+
+                <th>
+                    Risk
+                </th>
+
+            </tr>
+
+
+            {% for x in contractors %}
+
+            <tr>
+
+                <td>
+                    {{ x.name }}
+                </td>
+
+                <td>
+                    {{ x.performance }}%
+                </td>
+
+                <td>
+
+                    <span class="status">
+                        {{ x.risk }}
+                    </span>
+
+                </td>
+
+            </tr>
+
+            {% endfor %}
+
+        </table>
+
+    </div>
+
+</section>
+
+
+<!-- ======================================================
+     ALERTS
+====================================================== -->
+
+<section class="panel">
+
+    <div class="panel-head">
+
+        <div>
+
+            <h2>
+                Mine Alerts
+            </h2>
+
+            <p>
+                Environmental and ML-generated alerts
+                associated with this mine.
+            </p>
+
+        </div>
+
+        <span class="badge">
+            AUTOMATED
+        </span>
+
+    </div>
+
+
+    {% if alerts %}
+
+    <div class="risk-grid">
+
+        {% for alert in alerts %}
+
+        <div class="risk-card">
+
+            <span class="risk-label">
+                {{ alert.severity }} ALERT
+            </span>
+
+            <h3>
+                {{ alert.title }}
+            </h3>
+
+            <p>
+                {{ alert.message }}
+            </p>
+
+            <small>
+                {{ alert.created_at }}
+            </small>
+
+        </div>
+
+        {% endfor %}
+
+    </div>
+
+    {% else %}
+
+    <p>
+        No alerts currently recorded for this mine.
+    </p>
+
+    {% endif %}
+
+</section>
+
+{% endblock %}

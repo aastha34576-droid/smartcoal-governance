@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="page-head">
+    <div>
+        <div class="eyebrow">FIELD OPERATIONS</div>
+        <h1>New Field Inspection</h1>
+        <p>Geo-tagged and time-stamped digital observation.</p>
+    </div>
+</div>
+<section class="panel form-panel">
+<form method="post">
+    <label>Mine<select name="mine_id" required>
+        {% for m in mines %}<option value="{{ m.id }}">{{ m.name }} — {{ m.subsidiary }}</option>{% endfor %}
+    </select></label>
+    <label>Category<select name="category" required>
+        <option>Safety</option><option>Environment</option><option>Production</option><option>Labour</option>
+    </select></label>
+    <label>Severity<select name="severity" required>
+        <option>Low</option><option>Medium</option><option>High</option>
+    </select></label>
+    <label>Observation<textarea name="observation" required placeholder="Describe the field observation..."></textarea></label>
+    <label>Corrective Action<textarea name="corrective_action" required placeholder="What action should be taken?"></textarea></label>
+    <div class="location-row">
+        <label>Latitude<input id="latitude" name="latitude" readonly></label>
+        <label>Longitude<input id="longitude" name="longitude" readonly></label>
+    </div>
+    <button class="primary-btn" type="button" onclick="captureLocation()">Capture GPS Location</button>
+    <button class="primary-btn submit-btn" type="submit">Submit Inspection</button>
+</form>
+</section>
+{% endblock %}

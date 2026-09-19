@@ -1,0 +1,289 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<div class="page-header">
+    <div>
+        <h1>Report Mine Safety Incident</h1>
+        <p>Record an accident, emergency or worker-safety event with time and location details.</p>
+    </div>
+
+    <a href="{{ url_for('incidents') }}" class="btn btn-secondary">
+        ← Incident Management
+    </a>
+</div>
+
+
+<div class="panel">
+
+    <div class="panel-header">
+        <div>
+            <h2>Incident Details</h2>
+            <p>Provide accurate information for emergency response and investigation.</p>
+        </div>
+    </div>
+
+    <form method="POST">
+
+        <div class="form-grid">
+
+            <!-- MINE -->
+            <div class="form-group">
+                <label>Mine *</label>
+
+                <select name="mine_id" required>
+                    <option value="">Select mine</option>
+
+                    {% for mine in mines %}
+                    <option value="{{ mine.id }}">
+                        {{ mine.name }} — {{ mine.subsidiary }}
+                    </option>
+                    {% endfor %}
+
+                </select>
+            </div>
+
+
+            <!-- INCIDENT TYPE -->
+            <div class="form-group">
+                <label>Incident Type *</label>
+
+                <select name="incident_type" required>
+                    <option value="">Select incident type</option>
+                    <option>Equipment / Vehicle Accident</option>
+                    <option>Mine Fire</option>
+                    <option>Gas / Air Quality Emergency</option>
+                    <option>Roof / Slope Fall</option>
+                    <option>Worker Injury</option>
+                    <option>Worker Missing / Trapped</option>
+                    <option>Explosion</option>
+                    <option>Environmental Emergency</option>
+                    <option>Other</option>
+                </select>
+            </div>
+
+
+            <!-- SEVERITY -->
+            <div class="form-group">
+                <label>Severity *</label>
+
+                <select name="severity" required>
+                    <option value="">Select severity</option>
+                    <option value="CRITICAL">CRITICAL — Immediate emergency response</option>
+                    <option value="HIGH">HIGH — Serious safety event</option>
+                    <option value="MEDIUM">MEDIUM — Requires corrective action</option>
+                    <option value="LOW">LOW — Minor event</option>
+                </select>
+            </div>
+
+
+            <!-- DATE -->
+            <div class="form-group">
+                <label>Incident Date & Time *</label>
+
+                <input
+                    type="datetime-local"
+                    name="occurred_at"
+                    required
+                >
+            </div>
+
+        </div>
+
+
+        <!-- WORKER IMPACT -->
+        <div class="section-divider">
+            <h3>Worker Impact</h3>
+            <p>Enter the known human impact of the incident.</p>
+        </div>
+
+        <div class="form-grid four-columns">
+
+            <div class="form-group">
+                <label>Workers Affected</label>
+                <input
+                    type="number"
+                    name="workers_affected"
+                    min="0"
+                    value="0"
+                >
+            </div>
+
+            <div class="form-group">
+                <label>Injured</label>
+                <input
+                    type="number"
+                    name="injured_count"
+                    min="0"
+                    value="0"
+                >
+            </div>
+
+            <div class="form-group">
+                <label>Missing / Trapped</label>
+                <input
+                    type="number"
+                    name="missing_count"
+                    min="0"
+                    value="0"
+                >
+            </div>
+
+            <div class="form-group">
+                <label>Fatalities</label>
+                <input
+                    type="number"
+                    name="fatality_count"
+                    min="0"
+                    value="0"
+                >
+            </div>
+
+        </div>
+
+
+        <!-- DESCRIPTION -->
+        <div class="section-divider">
+            <h3>Incident Description</h3>
+            <p>Describe what happened and any immediately known circumstances.</p>
+        </div>
+
+        <div class="form-group">
+
+            <label>Description *</label>
+
+            <textarea
+                name="description"
+                rows="5"
+                required
+                placeholder="Describe the incident, affected area, equipment involved, immediate observations, etc."
+            ></textarea>
+
+        </div>
+
+
+        <!-- LOCATION -->
+        <div class="section-divider">
+            <h3>Incident Location</h3>
+            <p>Capture the field location when GPS is available.</p>
+        </div>
+
+        <div class="location-box">
+
+            <button
+                type="button"
+                class="btn btn-secondary"
+                onclick="captureLocation()"
+            >
+                📍 Capture Current GPS Location
+            </button>
+
+            <div class="form-grid">
+
+                <div class="form-group">
+                    <label>Latitude</label>
+
+                    <input
+                        type="text"
+                        id="latitude"
+                        name="latitude"
+                        placeholder="GPS latitude"
+                    >
+                </div>
+
+                <div class="form-group">
+                    <label>Longitude</label>
+
+                    <input
+                        type="text"
+                        id="longitude"
+                        name="longitude"
+                        placeholder="GPS longitude"
+                    >
+                </div>
+
+            </div>
+
+            <p class="muted">
+                GPS coordinates are optional but recommended for field incident reporting.
+            </p>
+
+        </div>
+
+
+        <!-- EMERGENCY NOTICE -->
+        <div class="alert-box">
+
+            <strong>⚠ Emergency Response Logic</strong>
+
+            <p>
+                Incidents marked <strong>CRITICAL</strong> will automatically
+                generate a critical safety alert in the SmartCoal alert system.
+                If workers are missing or trapped, rescue status will automatically
+                be marked as required.
+            </p>
+
+        </div>
+
+
+        <!-- ACTIONS -->
+        <div class="form-actions">
+
+            <a
+                href="{{ url_for('incidents') }}"
+                class="btn btn-secondary"
+            >
+                Cancel
+            </a>
+
+            <button
+                type="submit"
+                class="btn btn-primary"
+            >
+                🚨 Report Incident
+            </button>
+
+        </div>
+
+    </form>
+
+</div>
+
+
+<script>
+
+function captureLocation() {
+
+    if (!navigator.geolocation) {
+        alert("GPS location is not supported by this browser.");
+        return;
+    }
+
+    navigator.geolocation.getCurrentPosition(
+        function(position) {
+
+            document.getElementById("latitude").value =
+                position.coords.latitude.toFixed(6);
+
+            document.getElementById("longitude").value =
+                position.coords.longitude.toFixed(6);
+
+            alert("GPS location captured successfully.");
+
+        },
+
+        function(error) {
+
+            if (error.code === error.PERMISSION_DENIED) {
+                alert("Location permission was denied. Please allow location access and try again.");
+            } else {
+                alert("Unable to obtain GPS location.");
+            }
+
+        }
+    );
+}
+
+</script>
+
+{% endblock %}

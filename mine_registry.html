@@ -1,0 +1,585 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<style>
+    .registry-page {
+        padding: 24px;
+    }
+
+    .registry-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-end;
+        gap: 20px;
+        margin-bottom: 22px;
+    }
+
+    .registry-header h1 {
+        margin: 0;
+        font-size: 25px;
+        color: #263640;
+    }
+
+    .registry-header p {
+        margin: 7px 0 0;
+        color: #7a8790;
+        font-size: 12px;
+    }
+
+    .registry-count {
+        padding: 10px 14px;
+        border: 1px solid #dfe5e9;
+        border-radius: 7px;
+        background: #f8fafb;
+        color: #52616b;
+        font-size: 11px;
+        font-weight: 700;
+    }
+
+    .registry-controls {
+        display: grid;
+        grid-template-columns: minmax(260px, 1fr) 180px 180px 180px;
+        gap: 10px;
+        margin-bottom: 18px;
+    }
+
+    .registry-controls input,
+    .registry-controls select {
+        width: 100%;
+        box-sizing: border-box;
+        padding: 11px 12px;
+        border: 1px solid #d9e0e5;
+        border-radius: 7px;
+        background: white;
+        color: #344653;
+        font-size: 12px;
+        outline: none;
+    }
+
+    .registry-controls input:focus,
+    .registry-controls select:focus {
+        border-color: #82919c;
+    }
+
+    .registry-card {
+        background: #ffffff;
+        border: 1px solid #e1e6ea;
+        border-radius: 9px;
+        overflow: hidden;
+    }
+
+    .registry-table-wrap {
+        overflow-x: auto;
+    }
+
+    .registry-table {
+        width: 100%;
+        border-collapse: collapse;
+        min-width: 850px;
+    }
+
+    .registry-table th {
+        background: #f5f7f8;
+        color: #687680;
+        font-size: 10px;
+        text-transform: uppercase;
+        letter-spacing: .05em;
+        font-weight: 800;
+        padding: 13px 14px;
+        text-align: left;
+        border-bottom: 1px solid #e1e6ea;
+        white-space: nowrap;
+    }
+
+    .registry-table td {
+        padding: 13px 14px;
+        border-bottom: 1px solid #edf0f2;
+        color: #40515d;
+        font-size: 11px;
+        vertical-align: middle;
+    }
+
+    .registry-table tr:last-child td {
+        border-bottom: none;
+    }
+
+    .registry-table tbody tr:hover {
+        background: #fafcfd;
+    }
+
+    .mine-name {
+        font-weight: 800;
+        color: #263640;
+    }
+
+    .mine-state {
+        color: #84919a;
+        font-size: 10px;
+        margin-top: 3px;
+    }
+
+    .subsidiary {
+        font-weight: 700;
+        color: #52636e;
+    }
+
+    .metric {
+        font-weight: 800;
+        color: #344653;
+    }
+
+    .status-pill {
+        display: inline-flex;
+        align-items: center;
+        padding: 5px 8px;
+        border-radius: 20px;
+        font-size: 9px;
+        font-weight: 800;
+        letter-spacing: .03em;
+        white-space: nowrap;
+    }
+
+    .status-high {
+        background: #f6e8e6;
+        color: #9b3d36;
+    }
+
+    .status-medium {
+        background: #f7efdf;
+        color: #966417;
+    }
+
+    .status-low {
+        background: #e8f3ec;
+        color: #277047;
+    }
+
+    .status-pending {
+        background: #edf1f3;
+        color: #71808a;
+    }
+
+    .view-mine {
+        display: inline-block;
+        padding: 6px 9px;
+        border: 1px solid #d8e0e5;
+        border-radius: 5px;
+        text-decoration: none;
+        color: #536672;
+        font-size: 9px;
+        font-weight: 800;
+        white-space: nowrap;
+    }
+
+    .view-mine:hover {
+        background: #f2f5f7;
+    }
+
+    .registry-empty {
+        padding: 45px 20px;
+        text-align: center;
+        color: #84919a;
+        font-size: 12px;
+    }
+
+    .registry-footer {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 12px 14px;
+        background: #fafbfc;
+        border-top: 1px solid #e7ebee;
+        color: #7b8992;
+        font-size: 10px;
+    }
+
+    @media (max-width: 1000px) {
+        .registry-controls {
+            grid-template-columns: 1fr 1fr;
+        }
+    }
+
+    @media (max-width: 650px) {
+        .registry-page {
+            padding: 15px;
+        }
+
+        .registry-header {
+            align-items: flex-start;
+            flex-direction: column;
+        }
+
+        .registry-controls {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>
+
+
+<div class="registry-page">
+
+    <div class="registry-header">
+
+        <div>
+            <h1>Mine Registry</h1>
+
+            <p>
+                Centralized registry of mines monitored by the
+                SmartCoal Governance & Intelligence Platform.
+            </p>
+        </div>
+
+        <div class="registry-count">
+            {{ mines|length }} MINES REGISTERED
+        </div>
+
+    </div>
+
+
+    <div class="registry-controls">
+
+        <input
+            type="text"
+            id="mineSearch"
+            placeholder="Search mine name..."
+        >
+
+        <select id="subsidiaryFilter">
+
+            <option value="">All Subsidiaries</option>
+
+            {% for subsidiary in subsidiaries %}
+                <option value="{{ subsidiary }}">
+                    {{ subsidiary }}
+                </option>
+            {% endfor %}
+
+        </select>
+
+
+        <select id="stateFilter">
+
+            <option value="">All States</option>
+
+            {% for state in states %}
+                <option value="{{ state }}">
+                    {{ state }}
+                </option>
+            {% endfor %}
+
+        </select>
+
+
+        <select id="riskFilter">
+
+            <option value="">All Risk Status</option>
+            <option value="HIGH">High Risk</option>
+            <option value="MEDIUM">Medium Risk</option>
+            <option value="LOW">Low Risk</option>
+            <option value="DATA PENDING">Data Pending</option>
+
+        </select>
+
+    </div>
+
+
+    <div class="registry-card">
+
+        <div class="registry-table-wrap">
+
+            <table class="registry-table">
+
+                <thead>
+
+                    <tr>
+
+                        <th>Mine</th>
+                        <th>Subsidiary</th>
+                        <th>Compliance</th>
+                        <th>Risk Score</th>
+                        <th>Risk Status</th>
+                        <th>Location</th>
+                        <th>Profile</th>
+
+                    </tr>
+
+                </thead>
+
+
+                <tbody id="mineTableBody">
+
+                    {% for mine in mines %}
+
+                    <tr
+                        data-name="{{ mine.name|lower }}"
+                        data-subsidiary="{{ mine.subsidiary }}"
+                        data-state="{{ mine.state }}"
+                        data-risk="{{ mine.status|upper }}"
+                    >
+
+                        <td>
+
+                            <div class="mine-name">
+                                {{ mine.name }}
+                            </div>
+
+                            <div class="mine-state">
+                                {{ mine.state }}
+                            </div>
+
+                        </td>
+
+
+                        <td>
+                            <span class="subsidiary">
+                                {{ mine.subsidiary }}
+                            </span>
+                        </td>
+
+
+                        <td>
+
+                            {% if mine.status == "DATA PENDING" %}
+
+                                <span class="metric">—</span>
+
+                            {% else %}
+
+                                <span class="metric">
+                                    {{ mine.compliance }}%
+                                </span>
+
+                            {% endif %}
+
+                        </td>
+
+
+                        <td>
+
+                            {% if mine.status == "DATA PENDING" %}
+
+                                <span class="metric">—</span>
+
+                            {% else %}
+
+                                <span class="metric">
+                                    {{ mine.risk_score }}/100
+                                </span>
+
+                            {% endif %}
+
+                        </td>
+
+
+                        <td>
+
+                            {% if mine.status == "HIGH" %}
+
+                                <span class="status-pill status-high">
+                                    HIGH
+                                </span>
+
+                            {% elif mine.status == "MEDIUM" %}
+
+                                <span class="status-pill status-medium">
+                                    MEDIUM
+                                </span>
+
+                            {% elif mine.status == "LOW" %}
+
+                                <span class="status-pill status-low">
+                                    LOW
+                                </span>
+
+                            {% else %}
+
+                                <span class="status-pill status-pending">
+                                    DATA PENDING
+                                </span>
+
+                            {% endif %}
+
+                        </td>
+
+
+                        <td>
+                            {{ "%.4f"|format(mine.lat) }},
+                            {{ "%.4f"|format(mine.lon) }}
+                        </td>
+
+
+                        <td>
+
+                            <a
+                                class="view-mine"
+                                href="{{ url_for('mine_detail', mine_id=mine.id) }}"
+                            >
+                                VIEW
+                            </a>
+
+                        </td>
+
+                    </tr>
+
+                    {% endfor %}
+
+                </tbody>
+
+            </table>
+
+        </div>
+
+
+        <div
+            id="registryEmpty"
+            class="registry-empty"
+            style="display:none;"
+        >
+            No mines match the selected filters.
+        </div>
+
+
+        <div class="registry-footer">
+
+            <span id="visibleMineCount">
+                Showing {{ mines|length }} mines
+            </span>
+
+            <span>
+                SmartCoal Mine Registry
+            </span>
+
+        </div>
+
+    </div>
+
+</div>
+
+
+<script>
+
+const searchInput =
+    document.getElementById("mineSearch");
+
+const subsidiaryFilter =
+    document.getElementById("subsidiaryFilter");
+
+const stateFilter =
+    document.getElementById("stateFilter");
+
+const riskFilter =
+    document.getElementById("riskFilter");
+
+const rows =
+    Array.from(
+        document.querySelectorAll("#mineTableBody tr")
+    );
+
+const emptyMessage =
+    document.getElementById("registryEmpty");
+
+const visibleCount =
+    document.getElementById("visibleMineCount");
+
+
+function filterMines() {
+
+    const search =
+        searchInput.value.trim().toLowerCase();
+
+    const subsidiary =
+        subsidiaryFilter.value;
+
+    const state =
+        stateFilter.value;
+
+    const risk =
+        riskFilter.value;
+
+    let visible = 0;
+
+
+    rows.forEach(function(row) {
+
+        const name =
+            row.dataset.name || "";
+
+        const rowSubsidiary =
+            row.dataset.subsidiary || "";
+
+        const rowState =
+            row.dataset.state || "";
+
+        const rowRisk =
+            row.dataset.risk || "";
+
+
+        const matchesSearch =
+            !search ||
+            name.includes(search);
+
+        const matchesSubsidiary =
+            !subsidiary ||
+            rowSubsidiary === subsidiary;
+
+        const matchesState =
+            !state ||
+            rowState === state;
+
+        const matchesRisk =
+            !risk ||
+            rowRisk === risk;
+
+
+        const show =
+            matchesSearch &&
+            matchesSubsidiary &&
+            matchesState &&
+            matchesRisk;
+
+
+        row.style.display =
+            show ? "" : "none";
+
+
+        if (show) {
+            visible++;
+        }
+
+    });
+
+
+    visibleCount.textContent =
+        "Showing " + visible + " of " + rows.length + " mines";
+
+
+    emptyMessage.style.display =
+        visible === 0 ? "block" : "none";
+
+}
+
+
+searchInput.addEventListener(
+    "input",
+    filterMines
+);
+
+subsidiaryFilter.addEventListener(
+    "change",
+    filterMines
+);
+
+stateFilter.addEventListener(
+    "change",
+    filterMines
+);
+
+riskFilter.addEventListener(
+    "change",
+    filterMines
+);
+
+</script>
+
+{% endblock %}

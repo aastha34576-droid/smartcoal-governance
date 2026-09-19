@@ -1,0 +1,257 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<div class="page-header">
+    <div>
+        <h1>Emergency & Incident Management</h1>
+        <p>Monitor mine accidents, emergencies, worker safety events and response actions.</p>
+    </div>
+
+    {% if session.get("role") == "inspector" %}
+    <a href="{{ url_for('new_incident') }}" class="btn btn-primary">
+        + Report Incident
+    </a>
+    {% endif %}
+</div>
+
+
+<!-- SUMMARY -->
+<div class="stats-grid">
+
+    <div class="stat-card">
+        <div class="stat-label">ACTIVE INCIDENTS</div>
+        <div class="stat-value">
+            {{ incidents | selectattr("closure_status", "equalto", "OPEN") | list | length }}
+        </div>
+        <div class="stat-subtext">Require ongoing response</div>
+    </div>
+
+    <div class="stat-card">
+        <div class="stat-label">CRITICAL INCIDENTS</div>
+        <div class="stat-value">
+            {{ incidents | selectattr("severity", "equalto", "CRITICAL") | list | length }}
+        </div>
+        <div class="stat-subtext">Immediate attention required</div>
+    </div>
+
+    <div class="stat-card">
+        <div class="stat-label">WORKERS AFFECTED</div>
+        <div class="stat-value">
+            {{ incidents | sum(attribute="workers_affected") }}
+        </div>
+        <div class="stat-subtext">Across recorded incidents</div>
+    </div>
+
+    <div class="stat-card">
+        <div class="stat-label">OPEN INVESTIGATIONS</div>
+        <div class="stat-value">
+            {{ incidents | selectattr("investigation_status", "equalto", "PENDING") | list | length }}
+        </div>
+        <div class="stat-subtext">Awaiting investigation</div>
+    </div>
+
+</div>
+
+
+<!-- CRITICAL EVENTS -->
+{% set critical_incidents = incidents | selectattr("severity", "equalto", "CRITICAL") | list %}
+
+{% if critical_incidents %}
+
+<div class="panel">
+
+    <div class="panel-header">
+        <div>
+            <h2>⚠ Critical Safety Events</h2>
+            <p>Critical incidents requiring immediate attention.</p>
+        </div>
+    </div>
+
+    {% for incident in critical_incidents[:5] %}
+
+    <div class="risk-card high">
+
+        <div>
+            <strong>{{ incident.incident_type }}</strong>
+
+            <div class="muted">
+                {{ incident.mine_name }} · {{ incident.state }}
+            </div>
+        </div>
+
+        <div>
+            <span class="risk-badge high">CRITICAL</span>
+        </div>
+
+        <div class="incident-description">
+            {{ incident.description }}
+        </div>
+
+        <div class="incident-meta">
+
+            <span>👷 Workers: {{ incident.workers_affected }}</span>
+
+            <span>🩹 Injured: {{ incident.injured_count }}</span>
+
+            <span>🔎 Missing: {{ incident.missing_count }}</span>
+
+            <span>⚫ Fatalities: {{ incident.fatality_count }}</span>
+
+            <span>🚨 {{ incident.emergency_status }}</span>
+
+        </div>
+
+    </div>
+
+    {% endfor %}
+
+</div>
+
+{% endif %}
+
+
+<!-- INCIDENT HISTORY -->
+<div class="panel">
+
+    <div class="panel-header">
+        <div>
+            <h2>Incident History</h2>
+            <p>Recorded safety and emergency events across monitored mines.</p>
+        </div>
+    </div>
+
+    {% if incidents %}
+
+    <div class="table-container">
+
+        <table>
+
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Mine</th>
+                    <th>Incident</th>
+                    <th>Severity</th>
+                    <th>Workers</th>
+                    <th>Emergency</th>
+                    <th>Evacuation</th>
+                    <th>Rescue</th>
+                    <th>Investigation</th>
+                    <th>Status</th>
+                    <th>Reported</th>
+                </tr>
+            </thead>
+
+            <tbody>
+
+            {% for incident in incidents %}
+
+            <tr>
+
+                <td>
+                    #INC-{{ "%04d"|format(incident.id) }}
+                </td>
+
+                <td>
+                    <strong>{{ incident.mine_name }}</strong>
+                    <div class="muted">
+                        {{ incident.subsidiary }} · {{ incident.state }}
+                    </div>
+                </td>
+
+                <td>
+                    {{ incident.incident_type }}
+
+                    <div class="muted">
+                        {{ incident.description[:70] }}
+                        {% if incident.description|length > 70 %}...{% endif %}
+                    </div>
+                </td>
+
+                <td>
+
+                    {% if incident.severity == "CRITICAL" %}
+                        <span class="risk-badge high">CRITICAL</span>
+
+                    {% elif incident.severity == "HIGH" %}
+                        <span class="risk-badge high">HIGH</span>
+
+                    {% elif incident.severity == "MEDIUM" %}
+                        <span class="risk-badge medium">MEDIUM</span>
+
+                    {% else %}
+                        <span class="risk-badge low">LOW</span>
+                    {% endif %}
+
+                </td>
+
+                <td>
+                    {{ incident.workers_affected }}
+                </td>
+
+                <td>
+                    {{ incident.emergency_status }}
+                </td>
+
+                <td>
+                    {{ incident.evacuation_status }}
+                </td>
+
+                <td>
+                    {{ incident.rescue_status }}
+                </td>
+
+                <td>
+                    {{ incident.investigation_status }}
+                </td>
+
+                <td>
+
+                    {% if incident.closure_status == "CLOSED" %}
+                        <span class="status-badge success">CLOSED</span>
+                    {% else %}
+                        <span class="status-badge warning">OPEN</span>
+                    {% endif %}
+
+                </td>
+
+                <td>
+                    {{ incident.reported_at }}
+                </td>
+
+            </tr>
+
+            {% endfor %}
+
+            </tbody>
+
+        </table>
+
+    </div>
+
+    {% else %}
+
+    <div class="empty-state">
+
+        <h3>No incidents recorded</h3>
+
+        <p>
+            No mine safety incidents or emergency events have been reported.
+        </p>
+
+        {% if session.get("role") == "inspector" %}
+
+        <a href="{{ url_for('new_incident') }}" class="btn btn-primary">
+            Report First Incident
+        </a>
+
+        {% endif %}
+
+    </div>
+
+    {% endif %}
+
+</div>
+
+{% endblock %}

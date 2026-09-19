@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SmartCoal Governance</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+</head>
+<body>
+<header class="topbar">
+    <div class="brand"><span class="brand-mark">SC</span><div><strong>SmartCoal</strong><small>Governance & Intelligence Platform</small></div></div>
+    <div class="top-status"><span class="live-dot"></span> Governance Network Online</div>
+</header>
+<div class="layout">
+    <aside class="sidebar">
+        <div class="nav-title">CONTROL CENTRE</div>
+
+        <a class="nav active" href="{{ url_for('dashboard') }}">▦ Overview</a>
+
+        <a class="nav" href="{{ url_for('inspector') }}">◈ Inspector Portal</a>
+        <a class="nav" href="{{ url_for('incidents') }}">🚨 Emergency & Incidents</a>
+        <a class="nav" href="{{ url_for('mine_portal') }}">⛏ Mine Governance</a>
+        <a class="nav" href="{{ url_for('mine_registry') }}">▤ Mine Registry</a>
+        <a class="nav" href="#map-section">⌖ GIS Risk Map</a>
+        <a class="nav" href="#compliance">✓ Compliance</a>
+        <a class="nav" href="#inspections">◈ Inspections</a>
+        <a class="nav" href="#contractors">◉ Contractors</a>
+
+        <div class="nav-title space">SYSTEM</div>
+
+        <a class="nav" href="#analytics">⌁ AI Risk Analytics</a>
+        <a class="nav" href="#reports">▤ Reports</a>
+        <a class="nav" href="{{ url_for('logout') }}">⇥ Logout</a>
+    </aside>
+    <main class="content">
+        {% block content %}{% endblock %}
+    </main>
+</div>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="{{ url_for('static', filename='app.js') }}"></script>
+</body>
+</html>
