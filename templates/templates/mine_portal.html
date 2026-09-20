@@ -1,0 +1,67 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<div class="page-head">
+    <div>
+        <div class="eyebrow">MINE GOVERNANCE</div>
+        <h1>Mine Governance Portal</h1>
+        <p>Select a mine to view compliance, risk intelligence and inspection history.</p>
+    </div>
+
+    <a class="secondary-btn" href="{{ url_for('dashboard') }}">
+        ← Control Centre
+    </a>
+</div>
+
+<section class="panel">
+
+    <div class="panel-head">
+        <div>
+            <h2>Registered Mines</h2>
+            <p>Governance profiles available across monitored subsidiaries.</p>
+        </div>
+        <span class="badge">GOVERNANCE VIEW</span>
+    </div>
+
+    <div class="risk-grid">
+
+        {% for mine in mines %}
+
+        <a class="risk-card"
+           href="{{ url_for('mine_detail', mine_id=mine.id) }}">
+
+            <div>
+                <span class="risk-label">
+                    {{ mine.status }} RISK
+                </span>
+
+                <h3>{{ mine.name }}</h3>
+
+                <small>
+                    {{ mine.subsidiary }} · {{ mine.state }}
+                </small>
+            </div>
+
+            <div class="risk-score">
+                {{ mine.risk_score }}<small>/100</small>
+            </div>
+
+            <div class="risk-bar">
+                <i style="width:{{ mine.risk_score }}%"></i>
+            </div>
+
+            <p>
+                Compliance {{ mine.compliance }}%
+                · Open profile →
+            </p>
+
+        </a>
+
+        {% endfor %}
+
+    </div>
+
+</section>
+
+{% endblock %}

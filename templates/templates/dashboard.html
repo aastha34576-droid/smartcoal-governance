@@ -1,0 +1,2743 @@
+{% extends "base.html" %}
+{% block content %}
+
+<!-- ======================================================
+     PAGE HEADER
+====================================================== -->
+
+<div class="page-head">
+
+<div>
+
+    <div class="eyebrow">
+        NATIONAL / MULTI-MINE VIEW
+    </div>
+
+    <h1>
+        Governance Control Centre
+    </h1>
+
+    <p>
+        Unified compliance, inspection and operational risk visibility.
+    </p>
+
+</div>
+
+<a class="primary-btn" href="{{ url_for('new_inspection') }}">
+    + New Field Inspection
+</a>
+
+</div>
+
+<!-- ======================================================
+     TOP METRICS
+====================================================== -->
+
+<div class="cards">
+
+
+<div class="metric">
+
+    <span>MONITORED MINES</span>
+
+    <strong>
+        {{ total }}
+    </strong>
+
+    <small>
+        Across subsidiaries
+    </small>
+
+</div>
+
+
+<div class="metric">
+
+    <span>AVG. COMPLIANCE</span>
+
+    <strong>
+        {{ avg_compliance }}%
+    </strong>
+
+    <small>
+        Current governance status
+    </small>
+
+</div>
+
+
+<div class="metric danger">
+
+    <span>HIGH-RISK MINES</span>
+
+    <strong>
+        {{ high }}
+    </strong>
+
+    <small>
+        Require management attention
+    </small>
+
+</div>
+
+
+<div class="metric warning">
+
+    <span>OPEN ACTIONS</span>
+
+    <strong>
+        {{ open_issues }}
+    </strong>
+
+    <small>
+        Pending closure / escalation
+    </small>
+
+</div>
+
+
+</div>
+
+<!-- ======================================================
+     GIS RISK MAP
+====================================================== -->
+
+<section class="panel" id="map-section">
+
+
+<div class="panel-head">
+
+    <div>
+
+        <h2>
+            GIS Risk Intelligence
+        </h2>
+
+        <p>
+            Geographical view of calculated mine-level governance risk.
+        </p>
+
+    </div>
+
+    <span class="badge">
+        LIVE RISK VIEW
+    </span>
+
+</div>
+
+<div id="map"></div>
+
+
+</section>
+
+<!-- ======================================================
+     LIVE ENVIRONMENT
+====================================================== -->
+
+<section class="panel" id="live-environment">
+
+
+<div class="panel-head">
+
+    <div>
+
+        <h2>
+            Live Environmental Monitoring
+        </h2>
+
+        <p>
+            Latest environmental readings from Coal India CAAQMS.
+        </p>
+
+    </div>
+
+    {% if environment_live %}
+
+    <span class="badge">
+        ● LIVE · CAAQMS
+    </span>
+
+    {% else %}
+
+    <span class="badge">
+        CACHED FALLBACK
+    </span>
+
+    {% endif %}
+
+</div>
+
+
+{% if live_environment %}
+
+<div class="risk-grid">
+
+    {% for x in live_environment[:6] %}
+
+    <div class="risk-card">
+
+        <div>
+
+            <span class="risk-label">
+                {{ x.area }}
+            </span>
+
+            <h3>
+                {{ x.mine_name }}
+            </h3>
+
+            <small>
+                {{ x.company }}
+            </small>
+
+        </div>
+
+
+        <p>
+            <strong>PM2.5:</strong>
+            {{ x.pm25 if x.pm25 is not none else "N/A" }}
+            µg/m³
+        </p>
+
+        <p>
+            <strong>PM10:</strong>
+            {{ x.pm10 if x.pm10 is not none else "N/A" }}
+            µg/m³
+        </p>
+
+        <p>
+            <strong>SO₂:</strong>
+            {{ x.so2 if x.so2 is not none else "N/A" }}
+            µg/m³
+        </p>
+
+        <p>
+            <strong>NO₂:</strong>
+            {{ x.no2 if x.no2 is not none else "N/A" }}
+            µg/m³
+        </p>
+
+        <p>
+            <strong>CO:</strong>
+            {{ x.co if x.co is not none else "N/A" }}
+            mg/m³
+        </p>
+
+        <small>
+            Updated:
+            {{ x.record_time or x.recorded_at }}
+            · Device:
+            {{ x.device_id }}
+        </small>
+
+    </div>
+
+    {% endfor %}
+
+</div>
+
+{% else %}
+
+<p>
+    No live CAAQMS data available.
+    The system will continue using the last available data.
+</p>
+
+{% endif %}
+
+
+</section>
+
+<!-- ======================================================
+     GOVERNANCE ANALYTICS
+====================================================== -->
+
+<section class="panel" id="governance-analytics">
+
+
+<div class="panel-head">
+
+    <div>
+
+        <h2>
+            Governance Analytics
+        </h2>
+
+        <p>
+            Comparative intelligence across compliance, risk,
+            inspections and contractor performance.
+        </p>
+
+    </div>
+
+    <span class="badge">
+        ANALYTICS
+    </span>
+
+</div>
+
+
+<!-- ==================================================
+     CHART ROW 1
+================================================== -->
+
+<div class="two-col">
+
+
+    <!-- MINE COMPLIANCE / RISK -->
+
+    <div class="chart-card">
+
+        <div class="chart-title">
+
+            <div>
+
+                <h3>
+                    Mine-wise Compliance & Risk
+                </h3>
+
+                <small>
+                    Compliance percentage compared with governance risk score.
+                </small>
+
+            </div>
+
+        </div>
+
+        <div class="chart-box">
+            <canvas id="mineRiskChart"></canvas>
+        </div>
+
+    </div>
+
+
+    <!-- RISK DISTRIBUTION -->
+
+    <div class="chart-card">
+
+        <div class="chart-title">
+
+            <div>
+
+                <h3>
+                    Governance Risk Distribution
+                </h3>
+
+                <small>
+                    Current calculated risk classification across the mine registry.
+                </small>
+
+            </div>
+
+            <span class="mini-status">
+                SMARTCOAL RISK ENGINE
+            </span>
+
+        </div>
+
+
+        <div class="risk-distribution-layout">
+
+            <div class="risk-distribution-chart">
+
+                <div class="chart-box chart-small">
+
+                    <canvas id="riskDistributionChart"></canvas>
+
+                </div>
+
+            </div>
+
+
+            <div
+                id="riskBreakdown"
+                class="risk-breakdown"
+            >
+
+                <div class="risk-breakdown-loading">
+                    Calculating mine risk distribution...
+                </div>
+
+            </div>
+
+        </div>
+
+
+        <div class="risk-source-note">
+
+            <strong>
+                Risk interpretation:
+            </strong>
+
+            High, Medium and Low are calculated governance
+            classifications. <strong>Data Pending</strong> means
+            there is insufficient governance information to assign
+            a reliable risk classification.
+
+        </div>
+
+    </div>
+
+</div>
+<div class="two-col">
+
+
+    <!-- CONTRACTOR PERFORMANCE -->
+
+    <div class="chart-card">
+
+        <div class="chart-title">
+
+            <div>
+
+                <h3>
+                    Contractor Performance
+                </h3>
+
+                <small>
+                    Operational performance indicators across monitored contractors.
+                </small>
+
+            </div>
+
+        </div>
+
+        <div class="chart-box">
+            <canvas id="contractorChart"></canvas>
+        </div>
+
+    </div>
+
+
+    <!-- INSPECTION SEVERITY -->
+
+    <div class="chart-card">
+
+        <div class="chart-title">
+
+            <div>
+
+                <h3>
+                    Inspection Severity
+                </h3>
+
+                <small>
+                    Distribution of recent field observations.
+                </small>
+
+            </div>
+
+        </div>
+
+        <div class="chart-box chart-small">
+            <canvas id="inspectionSeverityChart"></canvas>
+        </div>
+
+    </div>
+
+</div>
+
+
+<!-- ==================================================
+     ENVIRONMENTAL ANALYTICS
+================================================== -->
+
+<div class="chart-card full-chart">
+
+    <div class="chart-title">
+
+        <div>
+
+            <h3>
+                Environmental Monitoring Comparison
+            </h3>
+
+            <small>
+                Latest available CAAQMS readings across monitored stations.
+            </small>
+
+        </div>
+
+        {% if environment_live %}
+
+        <span class="mini-status">
+            LIVE CAAQMS
+        </span>
+
+        {% else %}
+
+        <span class="mini-status">
+            CACHED DATA
+        </span>
+
+        {% endif %}
+
+    </div>
+
+    <div class="chart-box environment-chart">
+        <canvas id="environmentChart"></canvas>
+    </div>
+
+</div>
+
+
+<!-- ANALYTICS NOTE -->
+
+<div class="analytics-note">
+
+    <strong>
+        Governance Intelligence
+    </strong>
+
+    <p>
+        SmartCoal combines compliance status, environmental monitoring,
+        inspection observations, contractor performance and calculated
+        risk indicators to provide a unified governance view.
+    </p>
+
+    <small>
+        Environmental readings are sourced from CAAQMS where available.
+        Risk and ML indicators are generated by the SmartCoal platform.
+    </small>
+
+</div>
+
+
+</section>
+
+<!-- ======================================================
+     INSPECTIONS + COMPLIANCE
+====================================================== -->
+
+<div class="two-col">
+
+<section class="panel" id="inspections">
+
+
+<div class="panel-head">
+
+    <div>
+
+        <h2>
+            Recent Field Observations
+        </h2>
+
+        <p>
+            Latest geo-tagged inspection activity.
+        </p>
+
+    </div>
+
+</div>
+
+
+<div class="table-wrap">
+
+    <table>
+
+        <tr>
+
+            <th>
+                Mine
+            </th>
+
+            <th>
+                Category
+            </th>
+
+            <th>
+                Severity
+            </th>
+
+            <th>
+                Status
+            </th>
+
+        </tr>
+
+
+        {% for x in inspections %}
+
+        <tr>
+
+            <td>
+
+                <a href="{{ url_for('mine_detail', mine_id=x.mine_id) }}">
+                    {{ x.mine_name }}
+                </a>
+
+            </td>
+
+            <td>
+                {{ x.category }}
+            </td>
+
+            <td>
+
+                <span class="severity {{ x.severity|lower }}">
+                    {{ x.severity }}
+                </span>
+
+            </td>
+
+            <td>
+                {{ x.action_status }}
+            </td>
+
+        </tr>
+
+        {% endfor %}
+
+    </table>
+
+</div>
+
+</section>
+
+<section class="panel" id="compliance">
+
+
+<div class="panel-head">
+
+    <div>
+
+        <h2>
+            Compliance Watchlist
+        </h2>
+
+        <p>
+            Requirements needing attention.
+        </p>
+
+    </div>
+
+</div>
+
+
+<div class="table-wrap">
+
+    <table>
+
+        <tr>
+
+            <th>
+                Mine
+            </th>
+
+            <th>
+                Requirement
+            </th>
+
+            <th>
+                Due
+            </th>
+
+            <th>
+                Status
+            </th>
+
+        </tr>
+
+
+        {% for x in compliance %}
+
+        <tr>
+
+            <td>
+                {{ x.mine_name }}
+            </td>
+
+            <td>
+                {{ x.requirement }}
+            </td>
+
+            <td>
+                {{ x.due_date }}
+            </td>
+
+            <td>
+
+                <span class="status {{ x.status|lower|replace(' ','-') }}">
+                    {{ x.status }}
+                </span>
+
+            </td>
+
+        </tr>
+
+        {% endfor %}
+
+    </table>
+
+</div>
+
+</section>
+
+</div>
+
+<!-- ======================================================
+     CONTRACTOR GOVERNANCE
+====================================================== -->
+
+<section class="panel" id="contractors">
+
+
+<div class="panel-head">
+
+    <div>
+
+        <h2>
+            Contractor Governance
+        </h2>
+
+        <p>
+            Contractor performance and operational risk visibility.
+        </p>
+
+    </div>
+
+    <span class="badge">
+        RISK MONITORING
+    </span>
+
+</div>
+
+
+<div class="table-wrap">
+
+    <table>
+
+        <tr>
+
+            <th>
+                Contractor
+            </th>
+
+            <th>
+                Mine
+            </th>
+
+            <th>
+                Performance
+            </th>
+
+            <th>
+                Risk
+            </th>
+
+        </tr>
+
+
+        {% for x in contractors %}
+
+        <tr>
+
+            <td>
+                <strong>
+                    {{ x.name }}
+                </strong>
+            </td>
+
+            <td>
+                {{ x.mine_name }}
+            </td>
+
+            <td>
+                {{ x.performance }}%
+            </td>
+
+            <td>
+
+                <span class="severity {{ x.risk|lower }}">
+                    {{ x.risk }}
+                </span>
+
+            </td>
+
+        </tr>
+
+        {% endfor %}
+
+    </table>
+
+</div>
+
+
+</section>
+
+<!-- ======================================================
+     ML ANOMALY INTELLIGENCE
+====================================================== -->
+
+<section class="panel" id="analytics">
+
+
+<div class="panel-head">
+
+    <div>
+
+        <h2>
+            AI / ML Environmental Anomaly Detection
+        </h2>
+
+        <p>
+            Unsupervised machine learning identifies
+            unusual environmental patterns from historical
+            monitoring observations.
+        </p>
+
+    </div>
+
+
+    {% if ml_available %}
+
+    <span class="badge">
+        ML ENGINE ACTIVE
+    </span>
+
+    {% else %}
+
+    <span class="badge">
+        ML UNAVAILABLE
+    </span>
+
+    {% endif %}
+
+</div>
+
+
+{% if ml_available %}
+
+<div class="risk-grid">
+
+    {% for mine in mines %}
+
+    <a
+        class="risk-card"
+        href="{{ url_for('mine_detail', mine_id=mine.id) }}"
+    >
+
+        <div>
+
+            <span class="risk-label">
+                {{ mine.status }} GOVERNANCE RISK
+            </span>
+
+            <h3>
+                {{ mine.name }}
+            </h3>
+
+            <small>
+                {{ mine.subsidiary }}
+                ·
+                {{ mine.state }}
+            </small>
+
+        </div>
+
+
+        <div class="risk-score">
+
+            {{ mine.risk_score }}
+
+            <small>
+                /100
+            </small>
+
+        </div>
+
+
+        <div class="risk-bar">
+
+            <i
+                style="width:{{ mine.risk_score }}%"
+            ></i>
+
+        </div>
+
+
+        {% if mine.anomaly %}
+
+            {% if mine.anomaly.anomaly_level == "HIGH" %}
+
+            <p style="margin-top:12px;">
+
+                <strong>
+                    ML ANOMALY: HIGH
+                </strong>
+
+            </p>
+
+            {% elif mine.anomaly.anomaly_level == "MEDIUM" %}
+
+            <p style="margin-top:12px;">
+
+                <strong>
+                    ML ANOMALY: MEDIUM
+                </strong>
+
+            </p>
+
+            {% elif mine.anomaly.anomaly_level == "NORMAL" %}
+
+            <p style="margin-top:12px;">
+
+                <strong>
+                    ML PATTERN: NORMAL
+                </strong>
+
+            </p>
+
+            {% else %}
+
+            <p style="margin-top:12px;">
+
+                <strong>
+                    ML STATUS:
+                    {{ mine.anomaly.anomaly_level }}
+                </strong>
+
+            </p>
+
+            {% endif %}
+
+
+            <p>
+
+                Anomaly score:
+
+                <strong>
+                    {{ mine.anomaly.anomaly_score }}/100
+                </strong>
+
+            </p>
+
+
+            <p>
+                {{ mine.anomaly.explanation }}
+            </p>
+
+        {% else %}
+
+            <p style="margin-top:12px;">
+
+                <strong>
+                    ML STATUS: BUILDING BASELINE
+                </strong>
+
+            </p>
+
+            <p>
+
+                More historical environmental
+                observations are required before
+                anomaly detection becomes reliable.
+
+            </p>
+
+        {% endif %}
+
+
+        <p>
+
+            Compliance:
+            {{ mine.compliance }}%
+
+            ·
+
+            Open detailed risk profile →
+
+        </p>
+
+    </a>
+
+    {% endfor %}
+
+</div>
+
+
+<div
+    style="
+    margin-top:18px;
+    padding:14px;
+    background:#f4f7f9;
+    border:1px solid #e0e5e9;
+    border-radius:7px;
+    font-size:11px;
+    color:#5f6d77;
+    "
+>
+
+    <strong style="color:#26343f;">
+        How the ML signal works
+    </strong>
+
+    <p style="margin:7px 0 0;">
+
+        SmartCoal uses an
+        <strong>Isolation Forest</strong>
+        anomaly-detection model to identify environmental
+        readings that differ from historical monitoring
+        patterns.
+
+        The ML signal is then combined with compliance,
+        inspection, contractor and environmental indicators
+        in the unified governance risk engine.
+
+    </p>
+
+</div>
+
+{% else %}
+
+<div
+    style="
+    padding:16px;
+    background:#fff8e8;
+    border:1px solid #ead9a7;
+    border-radius:7px;
+    font-size:12px;
+    "
+>
+
+    <strong>
+        ML engine unavailable.
+    </strong>
+
+    Install the required machine-learning package
+    to enable environmental anomaly detection.
+
+</div>
+
+{% endif %}
+
+
+</section>
+
+<!-- ======================================================
+     CURRENT ALERTS
+====================================================== -->
+
+<section class="panel" id="alerts">
+
+
+<div class="panel-head">
+
+    <div>
+
+        <h2>
+            Governance Alert Intelligence
+        </h2>
+
+        <p>
+            Environmental threshold and ML anomaly alerts
+            generated from monitoring data.
+        </p>
+
+    </div>
+
+    <span class="badge">
+        AUTOMATED
+    </span>
+
+</div>
+
+
+<div
+    id="alert-container"
+    class="risk-grid"
+>
+
+    <div class="risk-card">
+
+        <h3>
+            Loading alerts...
+        </h3>
+
+        <p>
+            Checking current environmental
+            and ML signals.
+        </p>
+
+    </div>
+
+</div>
+
+
+</section>
+
+<!-- ======================================================
+     REPORTS
+====================================================== -->
+
+<section class="panel" id="reports">
+
+
+<div class="panel-head">
+
+    <div>
+
+        <h2>
+            Governance Reports
+        </h2>
+
+        <p>
+            Summary of current governance,
+            compliance and operational risk.
+        </p>
+
+    </div>
+
+    <span class="badge">
+        CURRENT STATUS
+    </span>
+
+</div>
+
+
+<div class="cards">
+
+    <div class="metric">
+
+        <span>
+            TOTAL MINES
+        </span>
+
+        <strong>
+            {{ total }}
+        </strong>
+
+        <small>
+            Currently monitored
+        </small>
+
+    </div>
+
+
+    <div class="metric">
+
+        <span>
+            AVERAGE COMPLIANCE
+        </span>
+
+        <strong>
+            {{ avg_compliance }}%
+        </strong>
+
+        <small>
+            Across monitored mines
+        </small>
+
+    </div>
+
+
+    <div class="metric danger">
+
+        <span>
+            HIGH-RISK MINES
+        </span>
+
+        <strong>
+            {{ high }}
+        </strong>
+
+        <small>
+            Require attention
+        </small>
+
+    </div>
+
+
+    <div class="metric warning">
+
+        <span>
+            OPEN ACTIONS
+        </span>
+
+        <strong>
+            {{ open_issues }}
+        </strong>
+
+        <small>
+            Pending closure
+        </small>
+
+    </div>
+
+</div>
+
+
+<p
+    style="
+    margin:0;
+    color:#71808c;
+    font-size:11px;
+    "
+>
+
+    Report generated from current mine governance,
+    inspection, compliance, contractor, environmental
+    and ML anomaly data.
+
+</p>
+
+
+</section>
+
+<!-- ======================================================
+     CHART.JS
+====================================================== -->
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<!-- ======================================================
+     CHART DATA + RENDERING
+====================================================== -->
+
+<script>
+
+document.addEventListener("DOMContentLoaded", function () {
+
+    /* ----------------------------------------------------
+       SAFE DATA FROM FLASK
+    ---------------------------------------------------- */
+
+    const mines = [
+    {% for m in mines %}
+    {
+    id: {{ m.id|tojson }},
+    name: {{ m.name|tojson }},
+    compliance: {{ m.compliance|default(0)|tojson }},
+    risk_score: {{ m.risk_score|default(0)|tojson }},
+    status: {{ m.status|default("")|tojson }}
+    }{% if not loop.last %},{% endif %}
+    {% endfor %}
+];
+
+const contractors = [
+    {% for c in contractors %}
+    {
+        name: {{ c.name|default("Unknown")|tojson }},
+        performance: {{ c.performance|default(0)|tojson }},
+        risk: {{ c.risk|default("")|tojson }}
+    }{% if not loop.last %},{% endif %}
+    {% endfor %}
+];
+
+const inspections = [
+    {% for i in inspections %}
+    {
+        severity: {{ i.severity|default("")|tojson }},
+        category: {{ i.category|default("")|tojson }}
+    }{% if not loop.last %},{% endif %}
+    {% endfor %}
+];
+
+const environment = [
+    {% for e in live_environment %}
+    {
+        mine_name: {{ e.mine_name|default("")|tojson }},
+        area: {{ e.area|default("")|tojson }},
+        pm25: {{ e.pm25|default(None)|tojson }},
+        pm10: {{ e.pm10|default(None)|tojson }},
+        so2: {{ e.so2|default(None)|tojson }},
+        no2: {{ e.no2|default(None)|tojson }}
+    }{% if not loop.last %},{% endif %}
+    {% endfor %}
+];
+
+
+    /* ----------------------------------------------------
+       COMMON CHART SETTINGS
+    ---------------------------------------------------- */
+
+    Chart.defaults.font.family =
+        "Inter, Arial, sans-serif";
+
+    Chart.defaults.font.size = 11;
+
+    Chart.defaults.color = "#687681";
+
+
+    /* ----------------------------------------------------
+       MINE COMPLIANCE + RISK
+    ---------------------------------------------------- */
+
+    const mineNames =
+        mines.map(m => m.name || "Unknown");
+
+    const complianceValues =
+        mines.map(m => Number(m.compliance || 0));
+
+    const riskValues =
+        mines.map(m => Number(m.risk_score || 0));
+
+
+    const mineRiskCanvas =
+        document.getElementById("mineRiskChart");
+
+
+    if (mineRiskCanvas) {
+
+        new Chart(
+            mineRiskCanvas,
+            {
+
+                type: "bar",
+
+                data: {
+
+                    labels: mineNames,
+
+                    datasets: [
+
+                        {
+                            label: "Compliance %",
+                            data: complianceValues,
+                            borderWidth: 1
+                        },
+
+                        {
+                            label: "Risk Score",
+                            data: riskValues,
+                            borderWidth: 1
+                        }
+
+                    ]
+
+                },
+
+                options: {
+
+                    responsive: true,
+
+                    maintainAspectRatio: false,
+
+                    scales: {
+
+                        y: {
+
+                            beginAtZero: true,
+
+                            max: 100,
+
+                            title: {
+
+                                display: true,
+
+                                text: "Score / Percentage"
+
+                            }
+
+                        }
+
+                    },
+
+                    plugins: {
+
+                        legend: {
+
+                            position: "top"
+
+                        }
+
+                    }
+
+                }
+
+            }
+        );
+
+    }
+
+
+    /* ----------------------------------------------------
+   RISK DISTRIBUTION
+---------------------------------------------------- */
+
+const riskGroups = {
+    HIGH: [],
+    MEDIUM: [],
+    LOW: [],
+    PENDING: []
+};
+
+
+/*
+ * DATA PENDING is deliberately separated from LOW.
+ *
+ * A mine with risk_score = 0 does NOT automatically
+ * mean that the mine is low risk.
+ */
+
+mines.forEach(function (mine) {
+
+    const status =
+        String(
+            mine.status || ""
+        ).trim().toUpperCase();
+
+
+    if (
+        status === "DATA PENDING" ||
+        status === "PENDING" ||
+        status === "INSUFFICIENT DATA" ||
+        status === "NO DATA"
+    ) {
+
+        riskGroups.PENDING.push(mine);
+
+    }
+
+    else if (status === "HIGH") {
+
+        riskGroups.HIGH.push(mine);
+
+    }
+
+    else if (status === "MEDIUM") {
+
+        riskGroups.MEDIUM.push(mine);
+
+    }
+
+    else if (status === "LOW") {
+
+        riskGroups.LOW.push(mine);
+
+    }
+
+    else {
+
+        /*
+         * Unknown / blank status is treated as pending
+         * rather than pretending it is low risk.
+         */
+
+        riskGroups.PENDING.push(mine);
+
+    }
+
+});
+
+
+const riskCounts = {
+
+    HIGH: riskGroups.HIGH.length,
+
+    MEDIUM: riskGroups.MEDIUM.length,
+
+    LOW: riskGroups.LOW.length,
+
+    PENDING: riskGroups.PENDING.length
+
+};
+
+
+const totalRiskMines =
+    mines.length;
+
+
+const riskLabels = [
+    "High Risk",
+    "Medium Risk",
+    "Low Risk",
+    "Data Pending"
+];
+
+
+const riskData = [
+
+    riskCounts.HIGH,
+
+    riskCounts.MEDIUM,
+
+    riskCounts.LOW,
+
+    riskCounts.PENDING
+
+];
+
+
+const riskCanvas =
+    document.getElementById(
+        "riskDistributionChart"
+    );
+
+
+if (riskCanvas) {
+
+    new Chart(
+        riskCanvas,
+        {
+
+            type: "doughnut",
+
+            data: {
+
+                labels: riskLabels,
+
+                datasets: [
+
+                    {
+
+                        data: riskData,
+
+                        borderWidth: 2
+
+                    }
+
+                ]
+
+            },
+
+            options: {
+
+                responsive: true,
+
+                maintainAspectRatio: false,
+
+                cutout: "58%",
+
+                interaction: {
+
+                    mode: "nearest",
+
+                    intersect: true
+
+                },
+
+                plugins: {
+
+                    legend: {
+
+                        position: "bottom",
+
+                        labels: {
+
+                            padding: 12,
+
+                            usePointStyle: true
+
+                        }
+
+                    },
+
+                    tooltip: {
+
+                        callbacks: {
+
+                            label: function(context) {
+
+                                const category =
+                                    context.label;
+
+                                const count =
+                                    context.raw;
+
+                                const percentage =
+                                    totalRiskMines > 0
+                                        ? (
+                                            count /
+                                            totalRiskMines *
+                                            100
+                                        ).toFixed(1)
+                                        : 0;
+
+                                return (
+                                    category +
+                                    ": " +
+                                    count +
+                                    " mines (" +
+                                    percentage +
+                                    "%)"
+                                );
+
+                            },
+
+                            afterLabel: function(context) {
+
+                                let group = [];
+
+                                if (
+                                    context.label ===
+                                    "High Risk"
+                                ) {
+
+                                    group =
+                                        riskGroups.HIGH;
+
+                                }
+
+                                else if (
+                                    context.label ===
+                                    "Medium Risk"
+                                ) {
+
+                                    group =
+                                        riskGroups.MEDIUM;
+
+                                }
+
+                                else if (
+                                    context.label ===
+                                    "Low Risk"
+                                ) {
+
+                                    group =
+                                        riskGroups.LOW;
+
+                                }
+
+                                else {
+
+                                    group =
+                                        riskGroups.PENDING;
+
+                                }
+
+
+                                if (!group.length) {
+
+                                    return "No mines";
+
+                                }
+
+
+                                return group.map(
+                                    function(mine) {
+
+                                        return "• " +
+                                            mine.name;
+
+                                    }
+                                );
+
+                            }
+
+                        }
+
+                    }
+
+                }
+
+            }
+
+        }
+
+    );
+
+}
+
+
+/* ----------------------------------------------------
+   RISK BREAKDOWN LIST
+---------------------------------------------------- */
+
+const riskBreakdown =
+    document.getElementById(
+        "riskBreakdown"
+    );
+
+
+if (riskBreakdown) {
+
+
+    function buildRiskGroup(
+        title,
+        minesInGroup,
+        cssClass
+    ) {
+
+        const count =
+            minesInGroup.length;
+
+
+        const percentage =
+            totalRiskMines > 0
+                ? (
+                    count /
+                    totalRiskMines *
+                    100
+                ).toFixed(1)
+                : 0;
+
+
+        let mineList;
+
+
+        if (!count) {
+
+            mineList = `
+                <div class="risk-empty">
+                    No mines
+                </div>
+            `;
+
+        }
+
+        else {
+
+            mineList = minesInGroup
+                .map(function(mine) {
+
+                    const score =
+                        Number(
+                            mine.risk_score || 0
+                        );
+
+
+                    return `
+
+                        <a
+                            class="risk-breakdown-mine"
+                            href="/mine/${mine.id || ""}"
+                        >
+
+                            <span>
+                                ${mine.name}
+                            </span>
+
+                            <strong>
+                                ${score}/100
+                            </strong>
+
+                        </a>
+
+                    `;
+
+                })
+                .join("");
+
+        }
+
+
+        return `
+
+            <div class="risk-breakdown-group ${cssClass}">
+
+                <div class="risk-breakdown-heading">
+
+                    <div>
+
+                        <span class="risk-group-dot"></span>
+
+                        <strong>
+                            ${title}
+                        </strong>
+
+                    </div>
+
+                    <span class="risk-count">
+                        ${count}
+                        ·
+                        ${percentage}%
+                    </span>
+
+                </div>
+
+
+                <div class="risk-breakdown-mines">
+
+                    ${mineList}
+
+                </div>
+
+            </div>
+
+        `;
+
+    }
+
+
+    riskBreakdown.innerHTML =
+
+        buildRiskGroup(
+            "High Risk",
+            riskGroups.HIGH,
+            "risk-high"
+        )
+
+        +
+
+        buildRiskGroup(
+            "Medium Risk",
+            riskGroups.MEDIUM,
+            "risk-medium"
+        )
+
+        +
+
+        buildRiskGroup(
+            "Low Risk",
+            riskGroups.LOW,
+            "risk-low"
+        )
+
+        +
+
+        buildRiskGroup(
+            "Data Pending",
+            riskGroups.PENDING,
+            "risk-pending"
+        );
+
+}
+    /* ----------------------------------------------------
+       CONTRACTOR PERFORMANCE
+    ---------------------------------------------------- */
+
+    const contractorNames =
+        contractors.map(
+            c => c.name || "Unknown"
+        );
+
+
+    const contractorPerformance =
+        contractors.map(
+            c => Number(c.performance || 0)
+        );
+
+
+    const contractorCanvas =
+        document.getElementById(
+            "contractorChart"
+        );
+
+
+    if (contractorCanvas) {
+
+        new Chart(
+            contractorCanvas,
+            {
+
+                type: "bar",
+
+                data: {
+
+                    labels: contractorNames,
+
+                    datasets: [
+
+                        {
+                            label: "Performance %",
+                            data: contractorPerformance,
+                            borderWidth: 1
+                        }
+
+                    ]
+
+                },
+
+                options: {
+
+                    indexAxis: "y",
+
+                    responsive: true,
+
+                    maintainAspectRatio: false,
+
+                    scales: {
+
+                        x: {
+
+                            beginAtZero: true,
+
+                            max: 100
+
+                        }
+
+                    },
+
+                    plugins: {
+
+                        legend: {
+
+                            display: false
+
+                        }
+
+                    }
+
+                }
+
+            }
+
+        );
+
+    }
+
+
+    /* ----------------------------------------------------
+       INSPECTION SEVERITY
+    ---------------------------------------------------- */
+
+    const severityCounts = {
+
+        HIGH: 0,
+
+        MEDIUM: 0,
+
+        LOW: 0,
+
+        OTHER: 0
+
+    };
+
+
+    inspections.forEach(function (item) {
+
+        const severity =
+            String(
+                item.severity || ""
+            ).toUpperCase();
+
+
+        if (
+            severity === "HIGH" ||
+            severity === "MEDIUM" ||
+            severity === "LOW"
+        ) {
+
+            severityCounts[severity]++;
+
+        }
+        else {
+
+            severityCounts.OTHER++;
+
+        }
+
+    });
+
+
+    const severityCanvas =
+        document.getElementById(
+            "inspectionSeverityChart"
+        );
+
+
+    if (severityCanvas) {
+
+        new Chart(
+            severityCanvas,
+            {
+
+                type: "doughnut",
+
+                data: {
+
+                    labels: [
+                        "High",
+                        "Medium",
+                        "Low",
+                        "Other"
+                    ],
+
+                    datasets: [
+
+                        {
+                            data: [
+                                severityCounts.HIGH,
+                                severityCounts.MEDIUM,
+                                severityCounts.LOW,
+                                severityCounts.OTHER
+                            ],
+
+                            borderWidth: 2
+
+                        }
+
+                    ]
+
+                },
+
+                options: {
+
+                    responsive: true,
+
+                    maintainAspectRatio: false,
+
+                    plugins: {
+
+                        legend: {
+
+                            position: "bottom"
+
+                        }
+
+                    }
+
+                }
+
+            }
+
+        );
+
+    }
+
+
+    /* ----------------------------------------------------
+       ENVIRONMENTAL MONITORING
+    ---------------------------------------------------- */
+
+    const environmentNames =
+        environment.map(
+            e =>
+                e.mine_name ||
+                e.area ||
+                "Station"
+        );
+
+
+    const pm25Values =
+        environment.map(
+            e =>
+                e.pm25 === null ||
+                e.pm25 === undefined ||
+                e.pm25 === ""
+                    ? null
+                    : Number(e.pm25)
+        );
+
+
+    const pm10Values =
+        environment.map(
+            e =>
+                e.pm10 === null ||
+                e.pm10 === undefined ||
+                e.pm10 === ""
+                    ? null
+                    : Number(e.pm10)
+        );
+
+
+    const so2Values =
+        environment.map(
+            e =>
+                e.so2 === null ||
+                e.so2 === undefined ||
+                e.so2 === ""
+                    ? null
+                    : Number(e.so2)
+        );
+
+
+    const no2Values =
+        environment.map(
+            e =>
+                e.no2 === null ||
+                e.no2 === undefined ||
+                e.no2 === ""
+                    ? null
+                    : Number(e.no2)
+        );
+
+
+    const environmentCanvas =
+        document.getElementById(
+            "environmentChart"
+        );
+
+
+    if (
+        environmentCanvas &&
+        environment.length
+    ) {
+
+        new Chart(
+            environmentCanvas,
+            {
+
+                type: "line",
+
+                data: {
+
+                    labels: environmentNames,
+
+                    datasets: [
+
+                        {
+                            label: "PM2.5",
+                            data: pm25Values,
+                            tension: 0.3,
+                            borderWidth: 2
+                        },
+
+                        {
+                            label: "PM10",
+                            data: pm10Values,
+                            tension: 0.3,
+                            borderWidth: 2
+                        },
+
+                        {
+                            label: "SO₂",
+                            data: so2Values,
+                            tension: 0.3,
+                            borderWidth: 2
+                        },
+
+                        {
+                            label: "NO₂",
+                            data: no2Values,
+                            tension: 0.3,
+                            borderWidth: 2
+                        }
+
+                    ]
+
+                },
+
+                options: {
+
+                    responsive: true,
+
+                    maintainAspectRatio: false,
+
+                    interaction: {
+
+                        mode: "index",
+
+                        intersect: false
+
+                    },
+
+                    scales: {
+
+                        y: {
+
+                            beginAtZero: true,
+
+                            title: {
+
+                                display: true,
+
+                                text: "Concentration"
+
+                            }
+
+                        }
+
+                    },
+
+                    plugins: {
+
+                        legend: {
+
+                            position: "top"
+
+                        }
+
+                    }
+
+                }
+
+            }
+
+        );
+
+    }
+
+
+    /* ----------------------------------------------------
+       ANALYTICS CARD HEIGHTS
+    ---------------------------------------------------- */
+
+    document
+        .querySelectorAll(".chart-box")
+        .forEach(function (box) {
+
+            box.style.position = "relative";
+
+        });
+
+});
+
+</script>
+
+<!-- ======================================================
+     CHART STYLING
+====================================================== -->
+
+<style>
+
+.chart-card {
+
+    background: #ffffff;
+
+    border: 1px solid #e2e7eb;
+
+    border-radius: 8px;
+
+    padding: 18px;
+
+    margin-bottom: 18px;
+
+}
+
+
+.chart-title {
+
+    display: flex;
+
+    justify-content: space-between;
+
+    align-items: flex-start;
+
+    gap: 15px;
+
+    margin-bottom: 14px;
+
+}
+
+
+.chart-title h3 {
+
+    margin: 0 0 5px;
+
+    font-size: 14px;
+
+    color: #26343f;
+
+}
+
+
+.chart-title small {
+
+    color: #7a8790;
+
+    font-size: 10px;
+
+}
+
+
+.chart-box {
+
+    position: relative;
+
+    height: 300px;
+
+}
+
+
+.chart-small {
+
+    height: 300px;
+
+}
+
+
+.environment-chart {
+
+    height: 330px;
+
+}
+
+
+.full-chart {
+
+    width: 100%;
+
+}
+
+
+.mini-status {
+
+    font-size: 9px;
+
+    font-weight: 700;
+
+    letter-spacing: .5px;
+
+    color: #65737e;
+
+    white-space: nowrap;
+
+}
+
+
+.analytics-note {
+
+    margin-top: 4px;
+
+    padding: 15px;
+
+    background: #f5f7f9;
+
+    border: 1px solid #e1e6ea;
+
+    border-radius: 7px;
+
+    font-size: 11px;
+
+    color: #64727d;
+
+}
+
+
+.analytics-note strong {
+
+    color: #26343f;
+
+}
+
+
+.analytics-note p {
+
+    margin: 7px 0 5px;
+
+}
+
+
+.analytics-note small {
+
+    font-size: 10px;
+
+    color: #84909a;
+
+}
+
+
+@media (max-width: 900px) {
+
+    .chart-box,
+    .chart-small,
+    .environment-chart {
+
+        height: 260px;
+
+    }
+
+}
+/* ======================================================
+   RISK DISTRIBUTION
+====================================================== */
+
+.risk-distribution-layout {
+
+    display: grid;
+
+    grid-template-columns:
+        minmax(220px, 0.9fr)
+        minmax(230px, 1.1fr);
+
+    gap: 16px;
+
+    align-items: center;
+
+}
+
+
+.risk-distribution-chart {
+
+    min-width: 0;
+
+}
+
+
+.risk-breakdown {
+
+    max-height: 300px;
+
+    overflow-y: auto;
+
+    padding-right: 4px;
+
+}
+
+
+.risk-breakdown-group {
+
+    border: 1px solid #e3e8ec;
+
+    border-radius: 7px;
+
+    padding: 9px 10px;
+
+    margin-bottom: 8px;
+
+    background: #fafbfc;
+
+}
+
+
+.risk-breakdown-heading {
+
+    display: flex;
+
+    justify-content: space-between;
+
+    align-items: center;
+
+    gap: 8px;
+
+    font-size: 11px;
+
+}
+
+
+.risk-breakdown-heading > div {
+
+    display: flex;
+
+    align-items: center;
+
+    gap: 7px;
+
+}
+
+
+.risk-group-dot {
+
+    width: 8px;
+
+    height: 8px;
+
+    border-radius: 50%;
+
+    display: inline-block;
+
+}
+
+
+.risk-high .risk-group-dot {
+
+    background: #a23b35;
+
+}
+
+
+.risk-medium .risk-group-dot {
+
+    background: #a06a12;
+
+}
+
+
+.risk-low .risk-group-dot {
+
+    background: #267144;
+
+}
+
+
+.risk-pending .risk-group-dot {
+
+    background: #7c8994;
+
+}
+
+
+.risk-count {
+
+    font-size: 10px;
+
+    color: #74818b;
+
+    font-weight: 700;
+
+}
+
+
+.risk-breakdown-mines {
+
+    margin-top: 7px;
+
+}
+
+
+.risk-breakdown-mine {
+
+    display: flex;
+
+    justify-content: space-between;
+
+    align-items: center;
+
+    gap: 8px;
+
+    padding: 6px 5px;
+
+    border-top: 1px solid #edf0f2;
+
+    text-decoration: none;
+
+    color: #344653;
+
+    font-size: 10px;
+
+}
+
+
+.risk-breakdown-mine:hover {
+
+    background: #f0f4f7;
+
+}
+
+
+.risk-breakdown-mine span {
+
+    overflow: hidden;
+
+    text-overflow: ellipsis;
+
+    white-space: nowrap;
+
+}
+
+
+.risk-breakdown-mine strong {
+
+    font-size: 10px;
+
+    color: #64727d;
+
+    white-space: nowrap;
+
+}
+
+
+.risk-empty {
+
+    padding-top: 6px;
+
+    color: #9aa5ad;
+
+    font-size: 10px;
+
+}
+
+
+.risk-source-note {
+
+    margin-top: 12px;
+
+    padding: 10px 12px;
+
+    background: #f5f7f9;
+
+    border: 1px solid #e1e6ea;
+
+    border-radius: 6px;
+
+    color: #687681;
+
+    font-size: 10px;
+
+    line-height: 1.5;
+
+}
+
+
+.risk-source-note strong {
+
+    color: #344653;
+
+}
+
+
+.risk-breakdown-loading {
+
+    color: #7b8893;
+
+    font-size: 11px;
+
+}
+
+
+@media (max-width: 1100px) {
+
+    .risk-distribution-layout {
+
+        grid-template-columns: 1fr;
+
+    }
+
+}
+</style>
+
+<!-- ======================================================
+     ALERT LOADING SCRIPT
+====================================================== -->
+
+<script>
+
+async function loadSmartCoalAlerts() {
+
+    const container =
+        document.getElementById(
+            "alert-container"
+        );
+
+
+    if (!container) {
+
+        return;
+
+    }
+
+
+    try {
+
+        const response =
+            await fetch(
+                "/api/alerts"
+            );
+
+
+        if (!response.ok) {
+
+            throw new Error(
+                "Unable to load alerts"
+            );
+
+        }
+
+
+        const alerts =
+            await response.json();
+
+
+        if (!alerts.length) {
+
+            container.innerHTML = `
+
+                <div class="risk-card">
+
+                    <h3>
+                        No active alerts
+                    </h3>
+
+                    <p>
+
+                        No environmental threshold
+                        or ML anomaly alerts are currently
+                        recorded.
+
+                    </p>
+
+                </div>
+
+            `;
+
+            return;
+
+        }
+
+
+        container.innerHTML =
+            alerts
+                .slice(0, 6)
+                .map(alert => {
+
+                    const severity =
+                        String(
+                            alert.severity || ""
+                        ).toUpperCase();
+
+
+                    const title =
+                        alert.title ||
+                        "Governance Alert";
+
+
+                    const mine =
+                        alert.mine_name ||
+                        "Unlinked monitoring station";
+
+
+                    const message =
+                        alert.message ||
+                        "Review required.";
+
+
+                    return `
+
+                        <div class="risk-card">
+
+                            <span class="risk-label">
+
+                                ${severity}
+                                ALERT
+
+                            </span>
+
+
+                            <h3>
+                                ${title}
+                            </h3>
+
+
+                            <small>
+                                ${mine}
+                            </small>
+
+
+                            <p style="margin-top:12px;">
+
+                                ${message}
+
+                            </p>
+
+
+                            <p>
+
+                                Status:
+
+                                <strong>
+                                    ${alert.status}
+                                </strong>
+
+                            </p>
+
+                        </div>
+
+                    `;
+
+                })
+                .join("");
+
+
+    }
+    catch (error) {
+
+        console.error(
+            "Alert loading error:",
+            error
+        );
+
+
+        container.innerHTML = `
+
+            <div class="risk-card">
+
+                <h3>
+                    Alert service unavailable
+                </h3>
+
+                <p>
+
+                    The governance dashboard
+                    is still operational.
+
+                </p>
+
+            </div>
+
+        `;
+
+    }
+
+}
+
+
+document.addEventListener(
+    "DOMContentLoaded",
+    loadSmartCoalAlerts
+);
+
+</script>
+
+{% endblock %}

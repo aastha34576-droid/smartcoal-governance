@@ -1,0 +1,160 @@
+
+{% extends "base.html" %}
+
+{% block content %}
+
+<div class="page-head">
+    <div>
+        <div class="eyebrow">FIELD OPERATIONS / INSPECTION PORTAL</div>
+        <h1>Inspector Portal</h1>
+        <p>Capture geo-tagged observations and initiate corrective action.</p>
+    </div>
+
+    <span class="badge">FIELD INSPECTION</span>
+</div>
+
+<section class="panel form-panel">
+
+    <div class="panel-head">
+        <div>
+            <h2>New Field Inspection</h2>
+            <p>Record a compliance, safety, environmental or operational observation.</p>
+        </div>
+    </div>
+
+    <form method="post" action="{{ url_for('new_inspection') }}">
+
+        <label>
+            Mine
+            <select name="mine_id" required>
+                {% for m in mines %}
+                <option value="{{ m.id }}">
+                    {{ m.name }} — {{ m.subsidiary }}
+                </option>
+                {% endfor %}
+            </select>
+        </label>
+
+        <label>
+            Inspection Category
+            <select name="category" required>
+                <option>Safety</option>
+                <option>Environment</option>
+                <option>Production</option>
+                <option>Labour</option>
+            </select>
+        </label>
+
+        <label>
+            Severity
+            <select name="severity" required>
+                <option>Low</option>
+                <option>Medium</option>
+                <option>High</option>
+            </select>
+        </label>
+
+        <label>
+            Field Observation
+            <textarea
+                name="observation"
+                required
+                placeholder="Describe the field observation..."
+            ></textarea>
+        </label>
+
+        <label>
+            Corrective Action
+            <textarea
+                name="corrective_action"
+                required
+                placeholder="Specify the corrective action required..."
+            ></textarea>
+        </label>
+
+        <div class="location-row">
+
+            <label>
+                Latitude
+                <input id="latitude" name="latitude" readonly>
+            </label>
+
+            <label>
+                Longitude
+                <input id="longitude" name="longitude" readonly>
+            </label>
+
+        </div>
+
+        <button
+            class="secondary-btn"
+            type="button"
+            onclick="captureLocation()">
+            Capture GPS Location
+        </button>
+
+        <button
+            class="primary-btn submit-btn"
+            type="submit">
+            Submit Inspection
+        </button>
+
+    </form>
+
+</section>
+
+<section class="panel">
+
+    <div class="panel-head">
+        <div>
+            <h2>Inspection Workflow</h2>
+            <p>Digital accountability from field observation to closure.</p>
+        </div>
+    </div>
+
+    <div class="workflow">
+        <span>Reported</span>
+        <b>→</b>
+        <span>Assigned</span>
+        <b>→</b>
+        <span>Corrected</span>
+        <b>→</b>
+        <span>Verified</span>
+        <b>→</b>
+        <span>Closed</span>
+    </div>
+
+</section>
+
+<script>
+function captureLocation() {
+
+    if (!navigator.geolocation) {
+        alert("GPS location is not supported by this browser.");
+        return;
+    }
+
+    navigator.geolocation.getCurrentPosition(
+        function(position) {
+
+            document.getElementById("latitude").value =
+                position.coords.latitude.toFixed(6);
+
+            document.getElementById("longitude").value =
+                position.coords.longitude.toFixed(6);
+
+        },
+        function(error) {
+
+            alert(
+                "Unable to capture GPS location. " +
+                "Please allow location access."
+            );
+
+        }
+    );
+}
+</script>
+
+{% endblock %}
+
